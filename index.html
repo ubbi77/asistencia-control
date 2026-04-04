@@ -1745,7 +1745,9 @@
   // Baja
   function abrirModalBaja(cod) {
     empBajaCodigo = cod;
-    document.getElementById('bajaEmpleadoNombre').textContent = empleados[cod]?.nombre || cod;
+    const emp = empleados[cod];
+    const nombre = emp?.nombre || emp?.Nombre || cod;
+    document.getElementById('bajaEmpleadoNombre').textContent = nombre;
     document.getElementById('modalBaja').classList.remove('hidden');
   }
   function confirmarBaja() {
