@@ -539,12 +539,14 @@
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,.6);
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
       z-index: 500;
     }
-    .modal-overlay.hidden { display: none; }
+    .modal-overlay.visible {
+      display: flex;
+    }
     .modal {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -1069,7 +1071,7 @@
     </div><!-- /panelEmpleados -->
 
     <!-- Modal nuevo/editar empleado -->
-    <div class="modal-overlay hidden" id="modalEmpleado">
+    <div class="modal-overlay" id="modalEmpleado">
       <div class="modal">
         <h3 id="modalTitulo">Nuevo empleado</h3>
         <div class="modal-fields">
@@ -1106,7 +1108,7 @@
     </div>
 
     <!-- Modal credencial -->
-    <div class="modal-overlay hidden" id="modalCredencial">
+    <div class="modal-overlay" id="modalCredencial">
       <div class="modal-cred">
         <h3>Credencial del empleado</h3>
         <div class="cred-preview">
