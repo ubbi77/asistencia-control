@@ -1098,8 +1098,20 @@
       </div>
     </div>
 
-    <!-- Modal confirmacion baja -->
-    <div class="modal-overlay hidden" id="modalBaja">
+    <!-- Modal credencial -->
+    <div class="modal-overlay hidden" id="modalCredencial">
+      <div class="modal-cred">
+        <h3>Credencial del empleado</h3>
+        <div class="cred-preview">
+          <canvas id="carnetCanvas" width="300" height="480"></canvas>
+        </div>
+        <div class="cred-actions">
+          <button class="btn-cred-dl" onclick="descargarCredencial()">Descargar PNG</button>
+          <button class="btn-cred-wa" onclick="compartirWhatsApp()">Enviar por WhatsApp</button>
+          <button class="btn-cancel"  onclick="cerrarModal('modalCredencial')">Cerrar</button>
+        </div>
+      </div>
+    </div>
       <div class="modal modal-confirm">
         <h3>Confirmar baja</h3>
         <p>Esta por dar de baja a <strong id="bajaEmpleadoNombre"></strong>. El empleado quedara inactivo y no podra fichar asistencia.</p>
@@ -1473,8 +1485,175 @@
   }
 
   // ══════════════════════════════════════════════════════════════
-  //  PANEL EMPLEADOS
+  //  CREDENCIAL — dibuja el carnet en Canvas y genera QR
   // ══════════════════════════════════════════════════════════════
+  let credEmpleadoCodigo = null;
+
+  function abrirCredencial(cod) {
+    credEmpleadoCodigo = cod;
+    document.getElementById('modalCredencial').classList.remove('hidden');
+    dibujarCarnet(cod);
+  }
+
+  function dibujarCarnet(cod) {
+    const emp    = empleados[cod];
+    const canvas = document.getElementById('carnetCanvas');
+    const ctx    = canvas.getContext('2d');
+    const W = 300, H = 480;
+
+    // Fondo
+    ctx.fillStyle = '#161b22';
+    ctx.fillRect(0, 0, W, H);
+
+    // Borde redondeado (clip)
+    ctx.save();
+    roundRect(ctx, 0, 0, W, H, 16);
+    ctx.clip();
+
+    // Header negro
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, W, 90);
+
+    // Logo / marca BLACK
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 28px Segoe UI, sans-serif';
+    ctx.letterSpacing = '6px';
+    ctx.textAlign = 'center';
+    ctx.fillText('BLACK', W / 2, 42);
+    ctx.font = '11px Segoe UI, sans-serif';
+    ctx.fillStyle = '#8b949e';
+    ctx.letterSpacing = '3px';
+    ctx.fillText('MAYORISTA', W / 2, 62);
+
+    // Línea acento azul
+    ctx.fillStyle = '#1f6feb';
+    ctx.fillRect(0, 90, W, 3);
+
+    // Foto placeholder (círculo)
+    const cx = W / 2, cy = 160, r = 52;
+    ctx.fillStyle = '#21262d';
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#30363d';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Ícono persona
+    ctx.fillStyle = '#8b949e';
+    ctx.beginPath();
+    ctx.arc(cx, cy - 10, 18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 30, 26, 20, 0, Math.PI, 0);
+    ctx.fill();
+
+    // Nombre
+    ctx.fillStyle = '#e6edf3';
+    ctx.font = 'bold 16px Segoe UI, sans-serif';
+    ctx.letterSpacing = '0px';
+    ctx.textAlign = 'center';
+    const nombre = emp?.nombre || '---';
+    ctx.fillText(nombre.toUpperCase(), W / 2, 242);
+
+    // Sector
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.fillText((emp?.sector || '').toUpperCase(), W / 2, 262);
+
+    // Separador
+    ctx.strokeStyle = '#30363d';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(40, 278); ctx.lineTo(W - 40, 278);
+    ctx.stroke();
+
+    // Código label
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '10px Segoe UI, sans-serif';
+    ctx.letterSpacing = '2px';
+    ctx.fillText('CODIGO DE EMPLEADO', W / 2, 298);
+
+    // Código valor
+    ctx.fillStyle = '#58a6ff';
+    ctx.font = 'bold 20px monospace';
+    ctx.letterSpacing = '4px';
+    ctx.fillText(cod, W / 2, 322);
+
+    // QR — generado con API pública
+    ctx.restore();
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${cod}&bgcolor=161b22&color=e6edf3&format=png`;
+    const qrImg = new Image();
+    qrImg.crossOrigin = 'anonymous';
+    qrImg.onload = () => {
+      ctx.save();
+      roundRect(ctx, 0, 0, W, H, 16);
+      ctx.clip();
+
+      // Fondo QR
+      ctx.fillStyle = '#0d1117';
+      ctx.fillRect(W/2 - 58, 340, 116, 116);
+      ctx.drawImage(qrImg, W/2 - 50, 348, 100, 100);
+
+      // Footer
+      ctx.fillStyle = '#8b949e';
+      ctx.font = '9px Segoe UI, sans-serif';
+      ctx.letterSpacing = '1px';
+      ctx.textAlign = 'center';
+      ctx.fillText('ESCANEAR PARA REGISTRAR ASISTENCIA', W/2, 478);
+      ctx.restore();
+    };
+    qrImg.onerror = () => {
+      // Si falla el QR, dibujar placeholder
+      ctx.save();
+      roundRect(ctx, 0, 0, W, H, 16);
+      ctx.clip();
+      ctx.fillStyle = '#21262d';
+      ctx.fillRect(W/2 - 50, 348, 100, 100);
+      ctx.fillStyle = '#8b949e';
+      ctx.font = '10px Segoe UI';
+      ctx.textAlign = 'center';
+      ctx.fillText('QR NO DISPONIBLE', W/2, 402);
+      ctx.restore();
+    };
+    qrImg.src = qrUrl;
+  }
+
+  // Helper roundRect para canvas
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function descargarCredencial() {
+    const canvas = document.getElementById('carnetCanvas');
+    const emp    = empleados[credEmpleadoCodigo];
+    const nombre = (emp?.nombre || credEmpleadoCodigo).replace(/\s+/g, '_');
+    const link   = document.createElement('a');
+    link.download = `credencial_${nombre}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  function compartirWhatsApp() {
+    const canvas = document.getElementById('carnetCanvas');
+    const emp    = empleados[credEmpleadoCodigo];
+    const nombre = emp?.nombre || credEmpleadoCodigo;
+    // En mobile abre WhatsApp con mensaje, la imagen se descarga primero
+    descargarCredencial();
+    const texto = encodeURIComponent(`Credencial de empleado — ${nombre}\nCodigo: ${credEmpleadoCodigo}`);
+    setTimeout(() => {
+      window.open(`https://wa.me/?text=${texto}`, '_blank');
+    }, 500);
+  }
   let empEditandoCodigo = null; // null = nuevo, string = editar
   let empBajaCodigo     = null;
 
@@ -1491,7 +1670,8 @@
         <td style="color:var(--muted)">${e.sector}</td>
         <td><span class="status-dot ${e.estado.toLowerCase()}">${e.estado === 'ACTIVO' ? 'Activo' : 'Inactivo'}</span></td>
         <td style="display:flex;gap:6px;padding:8px 20px">
-          <button class="action-btn edit" onclick="abrirModalEditar('${cod}')">Editar</button>
+          <button class="action-btn edit"  onclick="abrirModalEditar('${cod}')">Editar</button>
+          <button class="action-btn cred"  onclick="abrirCredencial('${cod}')">Credencial</button>
           ${e.estado === 'ACTIVO'
             ? `<button class="action-btn baja" onclick="abrirModalBaja('${cod}')">Dar de baja</button>`
             : `<button class="action-btn alta" onclick="darDeAlta('${cod}')">Dar de alta</button>`
