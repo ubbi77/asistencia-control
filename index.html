@@ -805,9 +805,15 @@
     <!-- Topbar -->
     <div class="topbar">
       <span class="page-title" id="pageTitle">Scanner</span>
-      <div class="clock-block">
-        <span id="reloj">--:--:--</span>
-        <span id="fecha">---</span>
+      <div class="topbar-actions">
+        <button class="btn-fullscreen" id="btnFullscreen" onclick="toggleFullscreen()">
+          <svg id="fsIcon" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+          Pantalla completa
+        </button>
+        <div class="clock-block">
+          <span id="reloj">--:--:--</span>
+          <span id="fecha">---</span>
+        </div>
       </div>
     </div>
 
@@ -831,8 +837,9 @@
 
       <div class="scan-card">
         <label>Escanee o ingrese el codigo</label>
-        <input type="text" id="codigoInput" inputmode="numeric"
-               autocomplete="off" placeholder="_ _ _ _ _ _ _ _" maxlength="20" />
+        <input type="text" id="codigoInput" inputmode="none"
+               autocomplete="off" placeholder="_ _ _ _ _ _ _ _" maxlength="20"
+               readonly onfocus="this.removeAttribute('readonly')" />
         <div id="mensaje" class="idle">Listo para escanear</div>
         <button class="btn-secondary" id="btnActualizar" onclick="cargarEmpleados()">
           <span id="btnIcon">&#8635;</span> Actualizar empleados
@@ -1119,6 +1126,23 @@
     const btn = document.getElementById('sidebarToggle');
     sb.classList.toggle('collapsed');
     btn.classList.toggle('collapsed-btn');
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  PANTALLA COMPLETA
+  // ══════════════════════════════════════════════════════════════
+  function toggleFullscreen() {
+    const el  = document.documentElement;
+    const btn = document.getElementById('btnFullscreen');
+    const ico = document.getElementById('fsIcon');
+
+    if (!document.fullscreenElement) {
+      el.requestFullscreen && el.requestFullscreen();
+      btn.innerHTML = '<svg id="fsIcon" viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/></svg> Salir';
+    } else {
+      document.exitFullscreen && document.exitFullscreen();
+      btn.innerHTML = '<svg id="fsIcon" viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg> Pantalla completa';
+    }
   }
 
   // ══════════════════════════════════════════════════════════════
