@@ -440,8 +440,182 @@
     .empty-state { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 28px 0; }
 
     /* ══════════════════════════════════════
-       PANEL REPORTES
+       PANEL EMPLEADOS
     ══════════════════════════════════════ */
+    .emp-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .emp-toolbar-left { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .search-input {
+      padding: 9px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.88rem;
+      outline: none;
+      width: 220px;
+      transition: border-color .2s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .filter-select {
+      padding: 9px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+    }
+    .btn-new {
+      padding: 9px 18px;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+      white-space: nowrap;
+    }
+    .btn-new:hover { background: var(--accent-h); }
+
+    /* Stats empleados */
+    .emp-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    /* Tabla empleados */
+    .action-btn {
+      padding: 4px 12px;
+      border-radius: 5px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid;
+      transition: all .15s;
+    }
+    .action-btn.edit  { background: transparent; border-color: var(--accent); color: var(--accent); }
+    .action-btn.edit:hover  { background: var(--accent); color: #fff; }
+    .action-btn.baja  { background: transparent; border-color: var(--red); color: var(--red-t); }
+    .action-btn.baja:hover  { background: var(--red); color: #fff; }
+    .action-btn.alta  { background: transparent; border-color: var(--green); color: var(--green-t); }
+    .action-btn.alta:hover  { background: var(--green); color: #fff; }
+
+    .status-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .status-dot::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.activo  { color: var(--green-t); }
+    .status-dot.activo::before  { background: var(--green-t); }
+    .status-dot.inactivo { color: var(--muted); }
+    .status-dot.inactivo::before { background: var(--muted); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 28px 24px;
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .modal h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 14px;
+    }
+    .modal-fields { display: flex; flex-direction: column; gap: 14px; }
+    .modal-field  { display: flex; flex-direction: column; gap: 6px; }
+    .modal-field label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .modal-field input,
+    .modal-field select {
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .modal-field input:focus,
+    .modal-field select:focus { border-color: var(--accent); }
+    .modal-field select option { background: var(--surface); }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding-top: 4px;
+    }
+    .btn-cancel {
+      padding: 9px 18px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+    .btn-save {
+      padding: 9px 22px;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-save:hover { background: var(--accent-h); }
+
+    /* Confirmacion baja */
+    .modal-confirm p {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .modal-confirm strong { color: var(--text); }
     .report-filters {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -606,6 +780,10 @@
       <button class="nav-item" onclick="showPanel('reportes', this)">
         <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
         Reportes
+      </button>
+      <button class="nav-item" onclick="showPanel('empleados', this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Empleados
       </button>
     </nav>
     <div class="sidebar-footer">
@@ -810,6 +988,121 @@
       </div>
     </div><!-- /panelReportes -->
 
+    <!-- Panel Empleados -->
+    <div class="panel" id="panelEmpleados">
+
+      <!-- Toolbar -->
+      <div class="emp-toolbar">
+        <div class="emp-toolbar-left">
+          <input class="search-input" type="text" id="empSearch"
+                 placeholder="Buscar por nombre o codigo..."
+                 oninput="filtrarTablaEmpleados()" />
+          <select class="filter-select" id="empFiltroEstado" onchange="filtrarTablaEmpleados()">
+            <option value="">Todos</option>
+            <option value="ACTIVO">Activos</option>
+            <option value="INACTIVO">Inactivos</option>
+          </select>
+          <select class="filter-select" id="empFiltroSector" onchange="filtrarTablaEmpleados()">
+            <option value="">Todos los sectores</option>
+            <option>Deposito</option>
+            <option>Ventas</option>
+            <option>Reparto</option>
+            <option>Administracion</option>
+          </select>
+        </div>
+        <button class="btn-new" onclick="abrirModalNuevo()">+ Nuevo empleado</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="emp-stats">
+        <div class="rstat">
+          <div class="rnum" id="empTotalActivos">--</div>
+          <div class="rlbl">Activos</div>
+        </div>
+        <div class="rstat">
+          <div class="rnum" id="empTotalInactivos">--</div>
+          <div class="rlbl">Inactivos</div>
+        </div>
+        <div class="rstat">
+          <div class="rnum" id="empTotalSectores">--</div>
+          <div class="rlbl">Sectores</div>
+        </div>
+        <div class="rstat">
+          <div class="rnum" id="empTotal">--</div>
+          <div class="rlbl">Total empleados</div>
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="table-card">
+        <div class="table-header">Listado de empleados</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Codigo</th>
+              <th>Nombre</th>
+              <th>Sector</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaEmpleados">
+            <tr><td colspan="5" class="empty-state">Cargue los empleados para ver el listado</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /panelEmpleados -->
+
+    <!-- Modal nuevo/editar empleado -->
+    <div class="modal-overlay hidden" id="modalEmpleado">
+      <div class="modal">
+        <h3 id="modalTitulo">Nuevo empleado</h3>
+        <div class="modal-fields">
+          <div class="modal-field">
+            <label>Codigo</label>
+            <input type="text" id="mCodigo" placeholder="Ej: 10000101" inputmode="numeric" />
+          </div>
+          <div class="modal-field">
+            <label>Nombre completo</label>
+            <input type="text" id="mNombre" placeholder="Apellido Nombre" />
+          </div>
+          <div class="modal-field">
+            <label>Sector</label>
+            <select id="mSector">
+              <option>Deposito</option>
+              <option>Ventas</option>
+              <option>Reparto</option>
+              <option>Administracion</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label>Estado</label>
+            <select id="mEstado">
+              <option value="ACTIVO">Activo</option>
+              <option value="INACTIVO">Inactivo</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="cerrarModal('modalEmpleado')">Cancelar</button>
+          <button class="btn-save" onclick="guardarEmpleado()">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal confirmacion baja -->
+    <div class="modal-overlay hidden" id="modalBaja">
+      <div class="modal modal-confirm">
+        <h3>Confirmar baja</h3>
+        <p>Esta por dar de baja a <strong id="bajaEmpleadoNombre"></strong>. El empleado quedara inactivo y no podra fichar asistencia.</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="cerrarModal('modalBaja')">Cancelar</button>
+          <button class="btn-save" style="background:var(--red)" onclick="confirmarBaja()">Dar de baja</button>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /main -->
 </div><!-- /app -->
 
@@ -859,7 +1152,7 @@
   // ══════════════════════════════════════════════════════════════
   //  NAVEGACION
   // ══════════════════════════════════════════════════════════════
-  const titles = { scanner: 'Scanner', reportes: 'Reportes' };
+  const titles = { scanner: 'Scanner', reportes: 'Reportes', empleados: 'Empleados' };
 
   function showPanel(id, btn) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -867,7 +1160,8 @@
     document.getElementById('panel' + id.charAt(0).toUpperCase() + id.slice(1)).classList.add('active');
     btn.classList.add('active');
     document.getElementById('pageTitle').textContent = titles[id];
-    if (id === 'scanner') setTimeout(() => input.focus(), 100);
+    if (id === 'scanner')   setTimeout(() => input.focus(), 100);
+    if (id === 'empleados') actualizarStatsEmpleados();
   }
 
   function showTab(id, btn) {
@@ -1155,7 +1449,131 @@
   }
 
   // ══════════════════════════════════════════════════════════════
-  //  REPORTES — placeholder (funcionalidad en siguiente paso)
+  //  PANEL EMPLEADOS
+  // ══════════════════════════════════════════════════════════════
+  let empEditandoCodigo = null; // null = nuevo, string = editar
+  let empBajaCodigo     = null;
+
+  function renderTablaEmpleados(lista) {
+    const tbody = document.getElementById('tablaEmpleados');
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Sin resultados</td></tr>';
+      return;
+    }
+    tbody.innerHTML = lista.map(([cod, e]) => `
+      <tr>
+        <td style="font-family:monospace">${cod}</td>
+        <td>${e.nombre}</td>
+        <td style="color:var(--muted)">${e.sector}</td>
+        <td><span class="status-dot ${e.estado.toLowerCase()}">${e.estado === 'ACTIVO' ? 'Activo' : 'Inactivo'}</span></td>
+        <td style="display:flex;gap:6px;padding:8px 20px">
+          <button class="action-btn edit" onclick="abrirModalEditar('${cod}')">Editar</button>
+          ${e.estado === 'ACTIVO'
+            ? `<button class="action-btn baja" onclick="abrirModalBaja('${cod}')">Dar de baja</button>`
+            : `<button class="action-btn alta" onclick="darDeAlta('${cod}')">Dar de alta</button>`
+          }
+        </td>
+      </tr>`).join('');
+  }
+
+  function actualizarStatsEmpleados() {
+    const todos     = Object.entries(empleados);
+    const activos   = todos.filter(([,e]) => e.estado === 'ACTIVO').length;
+    const inactivos = todos.filter(([,e]) => e.estado === 'INACTIVO').length;
+    const sectores  = new Set(todos.map(([,e]) => e.sector)).size;
+    document.getElementById('empTotalActivos').textContent   = activos;
+    document.getElementById('empTotalInactivos').textContent = inactivos;
+    document.getElementById('empTotalSectores').textContent  = sectores;
+    document.getElementById('empTotal').textContent          = todos.length;
+    renderTablaEmpleados(todos);
+  }
+
+  function filtrarTablaEmpleados() {
+    const q      = document.getElementById('empSearch').value.toLowerCase();
+    const estado = document.getElementById('empFiltroEstado').value;
+    const sector = document.getElementById('empFiltroSector').value;
+    const lista  = Object.entries(empleados).filter(([cod, e]) => {
+      const matchQ      = !q || e.nombre.toLowerCase().includes(q) || cod.includes(q);
+      const matchEstado = !estado || e.estado === estado;
+      const matchSector = !sector || e.sector === sector;
+      return matchQ && matchEstado && matchSector;
+    });
+    renderTablaEmpleados(lista);
+  }
+
+  // Abrir modal nuevo
+  function abrirModalNuevo() {
+    empEditandoCodigo = null;
+    document.getElementById('modalTitulo').textContent = 'Nuevo empleado';
+    document.getElementById('mCodigo').value  = '';
+    document.getElementById('mCodigo').disabled = false;
+    document.getElementById('mNombre').value  = '';
+    document.getElementById('mSector').value  = 'Deposito';
+    document.getElementById('mEstado').value  = 'ACTIVO';
+    document.getElementById('modalEmpleado').classList.remove('hidden');
+  }
+
+  // Abrir modal editar
+  function abrirModalEditar(cod) {
+    const e = empleados[cod];
+    if (!e) return;
+    empEditandoCodigo = cod;
+    document.getElementById('modalTitulo').textContent = 'Editar empleado';
+    document.getElementById('mCodigo').value    = cod;
+    document.getElementById('mCodigo').disabled = true; // no se puede cambiar el codigo
+    document.getElementById('mNombre').value    = e.nombre;
+    document.getElementById('mSector').value    = e.sector;
+    document.getElementById('mEstado').value    = e.estado;
+    document.getElementById('modalEmpleado').classList.remove('hidden');
+  }
+
+  // Guardar (nuevo o edición) — por ahora solo en memoria
+  function guardarEmpleado() {
+    const cod    = document.getElementById('mCodigo').value.trim();
+    const nombre = document.getElementById('mNombre').value.trim();
+    const sector = document.getElementById('mSector').value;
+    const estado = document.getElementById('mEstado').value;
+
+    if (!cod || !nombre) { alert('Complete codigo y nombre'); return; }
+
+    empleados[cod] = { nombre, sector, estado };
+    guardarCache(Object.entries(empleados).map(([codigo, e]) => ({ codigo, ...e })));
+    actualizarStatsEmpleados();
+    cerrarModal('modalEmpleado');
+  }
+
+  // Baja
+  function abrirModalBaja(cod) {
+    empBajaCodigo = cod;
+    document.getElementById('bajaEmpleadoNombre').textContent = empleados[cod]?.nombre || cod;
+    document.getElementById('modalBaja').classList.remove('hidden');
+  }
+  function confirmarBaja() {
+    if (empBajaCodigo && empleados[empBajaCodigo]) {
+      empleados[empBajaCodigo].estado = 'INACTIVO';
+      guardarCache(Object.entries(empleados).map(([codigo, e]) => ({ codigo, ...e })));
+      actualizarStatsEmpleados();
+      actualizarContador();
+    }
+    cerrarModal('modalBaja');
+  }
+
+  // Alta
+  function darDeAlta(cod) {
+    if (empleados[cod]) {
+      empleados[cod].estado = 'ACTIVO';
+      guardarCache(Object.entries(empleados).map(([codigo, e]) => ({ codigo, ...e })));
+      actualizarStatsEmpleados();
+      actualizarContador();
+    }
+  }
+
+  function cerrarModal(id) {
+    document.getElementById(id).classList.add('hidden');
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  REPORTES — placeholder
   // ══════════════════════════════════════════════════════════════
   function aplicarFiltro() {
     // Por implementar — conectar con Apps Script
