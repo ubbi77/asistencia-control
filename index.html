@@ -495,13 +495,14 @@
 
     /* Tabla empleados */
     .action-btn {
-      padding: 4px 12px;
+      padding: 4px 8px;
       border-radius: 5px;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 600;
       cursor: pointer;
       border: 1px solid;
       transition: all .15s;
+      white-space: nowrap;
     }
     .action-btn.edit  { background: transparent; border-color: var(--accent); color: var(--accent); }
     .action-btn.edit:hover  { background: var(--accent); color: #fff; }
@@ -771,6 +772,7 @@
     <div class="sidebar-brand">
       <h1>BLACK</h1>
       <p>Asistencia</p>
+      <span style="font-size:0.62rem;color:#444d56;margin-top:4px;display:block;letter-spacing:1px">v 1.55</span>
     </div>
     <nav class="sidebar-nav">
       <button class="nav-item active" onclick="showPanel('scanner', this)">
@@ -1658,7 +1660,7 @@
         <td>${e.nombre}</td>
         <td style="color:var(--muted)">${e.sector}</td>
         <td><span class="status-dot ${e.estado.toLowerCase()}">${e.estado === 'ACTIVO' ? 'Activo' : 'Inactivo'}</span></td>
-        <td style="display:flex;gap:6px;padding:8px 20px">
+        <td style="display:flex;gap:4px;padding:8px 20px;flex-wrap:nowrap;align-items:center">
           <button class="action-btn edit"  onclick="abrirModalEditar('${cod}')">Editar</button>
           <button class="action-btn cred"  onclick="abrirCredencial('${cod}')">Credencial</button>
           ${e.estado === 'ACTIVO'
