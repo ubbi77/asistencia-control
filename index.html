@@ -817,7 +817,7 @@
   // ══════════════════════════════════════════════════════════════
   //  CONFIG
   // ══════════════════════════════════════════════════════════════
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyS9B8quw_nJM_1B_YJbzaOnBaJx4HDd15YKGjWZmzvkmaOCQHi4NkEUJt3v-a0qRlv/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzV8EHmTRuiYRqEYCM5MMeq__l7FWi7mpGb3U04tbX0jZi-uFKEcPcqLu_97cwK797s/exec';
   const SECRET_KEY      = 'ZRoTWkPTq44048';
   const PASS            = 'black/7889/BLACK';
 
@@ -908,6 +908,20 @@
     const scannerActivo = document.getElementById('panelScanner').classList.contains('active');
     if (!loginVisible && scannerActivo) input.focus();
   });
+
+  // ══════════════════════════════════════════════════════════════
+  //  ANTI DOBLE ESCANEO — bloquea el mismo código por 3 segundos
+  // ══════════════════════════════════════════════════════════════
+  const ultimoScaneo = {}; // { codigo: timestamp }
+
+  function esDuplicado(codigo) {
+    const ahora = Date.now();
+    if (ultimoScaneo[codigo] && (ahora - ultimoScaneo[codigo]) < 3000) {
+      return true;
+    }
+    ultimoScaneo[codigo] = ahora;
+    return false;
+  }
 
   // ══════════════════════════════════════════════════════════════
   //  ESTADO GLOBAL
@@ -1038,6 +1052,13 @@
     if (Object.keys(empleados).length === 0) {
       mostrarMensaje('error', 'Primero actualice la lista de empleados'); return;
     }
+
+    // Anti doble escaneo
+    if (esDuplicado(codigo)) {
+      mostrarMensaje('warn', 'Lectura duplicada ignorada — espere un momento');
+      return;
+    }
+
     const emp = empleados[codigo];
     if (!emp)                        { mostrarMensaje('error', 'Codigo no encontrado: ' + codigo); return; }
     if (emp.estado !== 'ACTIVO')     { mostrarMensaje('warn',  emp.nombre + ' esta inactivo'); return; }
