@@ -1,1 +1,1804 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Asistencia BLACK</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --border:    #30363d;
+      --text:      #e6edf3;
+      --muted:     #8b949e;
+      --accent:    #1f6feb;
+      --accent-h:  #388bfd;
+      --green:     #238636;
+      --green-t:   #3fb950;
+      --red:       #da3633;
+      --red-t:     #f85149;
+      --yellow:    #9e6a03;
+      --yellow-t:  #e3b341;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ══════════════════════════════════════
+       LOGIN
+    ══════════════════════════════════════ */
+    #loginScreen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #loginScreen.hidden { display: none; }
+
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .login-card .brand {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .login-card .brand h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: 4px;
+      color: var(--text);
+    }
+    .login-card .brand p {
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .login-field { display: flex; flex-direction: column; gap: 6px; }
+    .login-field label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .login-field input {
+      padding: 12px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .login-field input:focus { border-color: var(--accent); }
+    .btn-primary {
+      padding: 13px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background .2s;
+    }
+    .btn-primary:hover { background: var(--accent-h); }
+    .login-error {
+      font-size: 0.8rem;
+      color: var(--red-t);
+      text-align: center;
+      min-height: 16px;
+    }
+
+    /* ══════════════════════════════════════
+       LAYOUT PRINCIPAL
+    ══════════════════════════════════════ */
+    #app { display: flex; flex: 1; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      flex-shrink: 0;
+      position: relative;
+      transition: width .25s ease, padding .25s ease;
+      overflow: hidden;
+    }
+    .sidebar.collapsed {
+      width: 0;
+      padding: 0;
+      border-right: none;
+    }
+
+    /* Toggle button */
+    .sidebar-toggle {
+      position: fixed;
+      top: 50%;
+      left: 220px;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 48px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: none;
+      border-radius: 0 8px 8px 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: left .25s ease;
+      color: var(--muted);
+    }
+    .sidebar-toggle:hover { color: var(--text); background: #1c2128; }
+    .sidebar-toggle svg {
+      width: 10px; height: 10px;
+      stroke: currentColor; fill: none;
+      stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+      transition: transform .25s;
+    }
+    .sidebar-toggle.collapsed-btn { left: 0; }
+    .sidebar-toggle.collapsed-btn svg { transform: rotate(180deg); }
+
+    .sidebar-brand {
+      padding: 0 24px 28px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .sidebar-brand h1 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--text);
+    }
+    .sidebar-brand p {
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 16px 12px;
+      flex: 1;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      color: var(--muted);
+      transition: all .15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .nav-item:hover { background: #1c2128; color: var(--text); }
+    .nav-item.active { background: #1c2128; color: var(--text); font-weight: 600; }
+    .nav-item .nav-icon {
+      width: 18px; height: 18px;
+      stroke: currentColor; fill: none;
+      stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+    .sidebar-footer {
+      padding: 16px 12px 0;
+      border-top: 1px solid var(--border);
+    }
+    .btn-logout {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      color: var(--muted);
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .btn-logout:hover { color: var(--red-t); }
+
+    /* ── Contenido ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      height: 60px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      flex-shrink: 0;
+    }
+    .topbar .page-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .topbar .clock-block { text-align: right; }
+    .topbar .clock-block #reloj {
+      font-size: 1.4rem;
+      font-weight: 700;
+      font-family: monospace;
+      letter-spacing: 2px;
+      display: block;
+    }
+    .topbar .clock-block #fecha {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-family: monospace;
+      text-transform: capitalize;
+    }
+
+    /* ── Panels ── */
+    .panel { display: none; flex: 1; overflow-y: auto; padding: 28px; }
+    .panel.active { display: flex; flex-direction: column; gap: 20px; }
+
+    /* ══════════════════════════════════════
+       PANEL SCANNER
+    ══════════════════════════════════════ */
+    .presentes-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .stat-card .num {
+      font-size: 2.2rem;
+      font-weight: 700;
+      font-family: monospace;
+      line-height: 1;
+    }
+    .stat-card .lbl {
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .stat-card.green { border-color: var(--green); }
+    .stat-card.green .num { color: var(--green-t); }
+    .stat-card.red   { border-color: var(--red); }
+    .stat-card.red .num   { color: var(--red-t); }
+
+    .scan-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .scan-card label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    #codigoInput {
+      width: 100%;
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: monospace;
+      letter-spacing: 6px;
+      text-align: center;
+      padding: 18px 20px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s;
+      caret-color: var(--accent);
+    }
+    #codigoInput:focus { border-color: var(--accent); }
+
+    #mensaje {
+      min-height: 56px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 14px 20px;
+      text-align: center;
+      transition: all .25s;
+    }
+    #mensaje.idle  { color: var(--muted); border: 1px solid var(--border); }
+    #mensaje.ok    { background: #0d2818; border: 1px solid var(--green); color: var(--green-t); }
+    #mensaje.error { background: #2d1216; border: 1px solid var(--red);   color: var(--red-t); }
+    #mensaje.warn  { background: #2d2214; border: 1px solid var(--yellow);color: var(--yellow-t); }
+
+    .btn-secondary {
+      padding: 11px 16px;
+      background: #21262d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all .2s;
+      width: 100%;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-secondary:disabled { opacity: .4; cursor: not-allowed; }
+    .spin { display: inline-block; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #statusEmpleados {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    #statusEmpleados.loaded { color: var(--green-t); }
+
+    /* ── Tabla movimientos ── */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .table-card .table-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    thead th {
+      text-align: left;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    tbody td {
+      padding: 11px 20px;
+      border-bottom: 1px solid #1c2128;
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #1c2128; }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+    }
+    .badge.ingreso { background: #0d2818; color: var(--green-t); border: 1px solid var(--green); }
+    .badge.salida  { background: #2d1216; color: var(--red-t);   border: 1px solid var(--red); }
+    .empty-state { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 28px 0; }
+
+    /* ══════════════════════════════════════
+       PANEL EMPLEADOS
+    ══════════════════════════════════════ */
+    .emp-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .emp-toolbar-left { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .search-input {
+      padding: 9px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.88rem;
+      outline: none;
+      width: 220px;
+      transition: border-color .2s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .filter-select {
+      padding: 9px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+    }
+    .btn-new {
+      padding: 9px 18px;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+      white-space: nowrap;
+    }
+    .btn-new:hover { background: var(--accent-h); }
+
+    /* Stats empleados */
+    .emp-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    /* Tabla empleados */
+    .action-btn {
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .action-btn.edit  { background: transparent; border-color: var(--accent); color: var(--accent); }
+    .action-btn.edit:hover  { background: var(--accent); color: #fff; }
+    .action-btn.baja  { background: transparent; border-color: var(--red); color: var(--red-t); }
+    .action-btn.baja:hover  { background: var(--red); color: #fff; }
+    .action-btn.alta  { background: transparent; border-color: var(--green); color: var(--green-t); }
+    .action-btn.alta:hover  { background: var(--green); color: #fff; }
+
+    .status-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .status-dot::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.activo  { color: var(--green-t); }
+    .status-dot.activo::before  { background: var(--green-t); }
+    .status-dot.inactivo { color: var(--muted); }
+    .status-dot.inactivo::before { background: var(--muted); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+    }
+    .modal-overlay.visible {
+      display: flex;
+    }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 28px 24px;
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .modal h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 14px;
+    }
+    .modal-fields { display: flex; flex-direction: column; gap: 14px; }
+    .modal-field  { display: flex; flex-direction: column; gap: 6px; }
+    .modal-field label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .modal-field input,
+    .modal-field select {
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .modal-field input:focus,
+    .modal-field select:focus { border-color: var(--accent); }
+    .modal-field select option { background: var(--surface); }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding-top: 4px;
+    }
+    .btn-cancel {
+      padding: 9px 18px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+    .btn-save {
+      padding: 9px 22px;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-save:hover { background: var(--accent-h); }
+
+    /* Confirmacion baja */
+    .modal-confirm p {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .modal-confirm strong { color: var(--text); }
+    .report-filters {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: flex-end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
+    .filter-group label {
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .filter-group input,
+    .filter-group select {
+      padding: 9px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .filter-group input:focus,
+    .filter-group select:focus { border-color: var(--accent); }
+    .filter-group select option { background: var(--surface); }
+    .btn-filter {
+      padding: 9px 20px;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+      align-self: flex-end;
+    }
+    .btn-filter:hover { background: var(--accent-h); }
+    .btn-export {
+      padding: 9px 20px;
+      background: #21262d;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      align-self: flex-end;
+    }
+    .btn-export:hover { border-color: var(--green); color: var(--green-t); }
+
+    .report-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .rstat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .rstat .rnum {
+      font-size: 1.8rem;
+      font-weight: 700;
+      font-family: monospace;
+      color: var(--text);
+    }
+    .rstat .rlbl {
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 2px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+    }
+    .tab {
+      padding: 9px 18px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all .15s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Tabla horas */
+    .hours-row td:last-child { font-family: monospace; font-weight: 600; color: var(--green-t); }
+
+    /* Ausentes */
+    .absent-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: #2d1216;
+      border: 1px solid var(--red);
+      border-radius: 20px;
+      font-size: 0.78rem;
+      color: var(--red-t);
+      margin: 4px;
+    }
+    .absent-wrap { padding: 16px 20px; display: flex; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN
+══════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="brand">
+      <h1>BLACK</h1>
+      <p>Control de Asistencia</p>
+    </div>
+    <div class="login-field">
+      <label>Contraseña</label>
+      <input type="password" id="loginPass" placeholder="Ingrese su contraseña" />
+    </div>
+    <p class="login-error" id="loginError"></p>
+    <button class="btn-primary" onclick="intentarLogin()">Ingresar</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     APP
+══════════════════════════════════════ -->
+<div id="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1>BLACK</h1>
+      <p>Asistencia</p>
+      <span style="font-size:0.62rem;color:#444d56;margin-top:4px;display:block;letter-spacing:1px">v 1.59</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="showPanel('scanner', this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 5h2M7 5h1M11 5h3M17 5h1M20 5h1M3 12h1M7 12h5M15 12h1M19 12h2M3 19h2M7 19h1M11 19h3M17 19h1M20 19h1"/></svg>
+        Scanner
+      </button>
+      <button class="nav-item" onclick="showPanel('reportes', this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Reportes
+      </button>
+      <button class="nav-item" onclick="showPanel('empleados', this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Empleados
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="cerrarSesion()">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Cerrar sesion
+      </button>
+    </div>
+  </aside>
+
+  <!-- Toggle sidebar -->
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 10 10"><polyline points="7,2 3,5 7,8"/></svg>
+  </button>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <span class="page-title" id="pageTitle">Scanner</span>
+      <div class="topbar-actions">
+        <button class="btn-fullscreen" id="btnFullscreen" onclick="toggleFullscreen()">
+          <svg id="fsIcon" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+          Pantalla completa
+        </button>
+        <div class="clock-block">
+          <span id="reloj">--:--:--</span>
+          <span id="fecha">---</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Scanner -->
+    <div class="panel active" id="panelScanner">
+
+      <div class="presentes-bar">
+        <div class="stat-card green">
+          <span class="num" id="cntPresentes">0</span>
+          <span class="lbl">Presentes</span>
+        </div>
+        <div class="stat-card red">
+          <span class="num" id="cntAusentes">0</span>
+          <span class="lbl">Ausentes</span>
+        </div>
+        <div class="stat-card">
+          <span class="num" id="cntTotal">0</span>
+          <span class="lbl">Total activos</span>
+        </div>
+      </div>
+
+      <div class="scan-card">
+        <label>Escanee o ingrese el codigo</label>
+        <input type="text" id="codigoInput" inputmode="none"
+               autocomplete="off" placeholder="_ _ _ _ _ _ _ _" maxlength="20"
+               readonly onfocus="this.removeAttribute('readonly')" />
+        <div id="mensaje" class="idle">Listo para escanear</div>
+        <button class="btn-secondary" id="btnActualizar" onclick="cargarEmpleados()">
+          <span id="btnIcon">&#8635;</span> Actualizar empleados
+        </button>
+        <p id="statusEmpleados">Empleados no cargados</p>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">Ultimos movimientos</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Codigo</th>
+              <th>Nombre</th>
+              <th>Sector</th>
+              <th>Movimiento</th>
+            </tr>
+          </thead>
+          <tbody id="tablaBody">
+            <tr><td colspan="5" class="empty-state">Sin registros</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /panelScanner -->
+
+    <!-- Panel Reportes -->
+    <div class="panel" id="panelReportes">
+
+      <!-- Filtros -->
+      <div class="report-filters">
+        <div class="filter-group">
+          <label>Desde</label>
+          <input type="date" id="fDesde" />
+        </div>
+        <div class="filter-group">
+          <label>Hasta</label>
+          <input type="date" id="fHasta" />
+        </div>
+        <div class="filter-group">
+          <label>Empleado</label>
+          <select id="fEmpleado">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Sector</label>
+          <select id="fSector">
+            <option value="">Todos</option>
+            <option>Deposito</option>
+            <option>Ventas</option>
+            <option>Reparto</option>
+            <option>Administracion</option>
+          </select>
+        </div>
+        <button class="btn-filter" onclick="aplicarFiltro()">Consultar</button>
+        <button class="btn-export" onclick="exportarExcel()">Exportar Excel</button>
+      </div>
+
+      <!-- Stats resumen -->
+      <div class="report-stats">
+        <div class="rstat">
+          <div class="rnum" id="rTotalDias">--</div>
+          <div class="rlbl">Dias consultados</div>
+        </div>
+        <div class="rstat">
+          <div class="rnum" id="rTotalHoras">--</div>
+          <div class="rlbl">Horas totales</div>
+        </div>
+        <div class="rstat">
+          <div class="rnum" id="rPromHoras">--</div>
+          <div class="rlbl">Promedio diario</div>
+        </div>
+        <div class="rstat">
+          <div class="rnum" id="rAusencias">--</div>
+          <div class="rlbl">Ausencias</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div>
+        <div class="tabs">
+          <button class="tab active" onclick="showTab('tabHoras', this)">Horas por dia</button>
+          <button class="tab" onclick="showTab('tabSemanal', this)">Resumen semanal</button>
+          <button class="tab" onclick="showTab('tabMovimientos', this)">Movimientos</button>
+          <button class="tab" onclick="showTab('tabAusentes', this)">Ausentes</button>
+        </div>
+
+        <!-- Tab: Horas por dia -->
+        <div class="tab-content active table-card" id="tabHoras" style="border-top:none;border-radius:0 0 10px 10px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Empleado</th>
+                <th>Sector</th>
+                <th>Ingreso</th>
+                <th>Salida</th>
+                <th>Horas trabajadas</th>
+              </tr>
+            </thead>
+            <tbody id="bodyHoras">
+              <tr><td colspan="6" class="empty-state">Seleccione un periodo y consulte</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Tab: Resumen semanal -->
+        <div class="tab-content table-card" id="tabSemanal" style="border-top:none;border-radius:0 0 10px 10px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Semana</th>
+                <th>Empleado</th>
+                <th>Dias trabajados</th>
+                <th>Total horas</th>
+                <th>Promedio diario</th>
+              </tr>
+            </thead>
+            <tbody id="bodySemanal">
+              <tr><td colspan="5" class="empty-state">Seleccione un periodo y consulte</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Tab: Movimientos -->
+        <div class="tab-content table-card" id="tabMovimientos" style="border-top:none;border-radius:0 0 10px 10px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Codigo</th>
+                <th>Nombre</th>
+                <th>Sector</th>
+                <th>Movimiento</th>
+              </tr>
+            </thead>
+            <tbody id="bodyMovimientos">
+              <tr><td colspan="6" class="empty-state">Seleccione un periodo y consulte</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Tab: Ausentes -->
+        <div class="tab-content table-card" id="tabAusentes" style="border-top:none;border-radius:0 0 10px 10px;">
+          <div class="absent-wrap" id="bodyAusentes">
+            <p class="empty-state" style="width:100%">Seleccione un periodo y consulte</p>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /panelReportes -->
+
+    <!-- Panel Empleados -->
+    <div class="panel" id="panelEmpleados">
+
+      <!-- Toolbar -->
+      <div class="emp-toolbar">
+        <div class="emp-toolbar-left">
+          <input class="search-input" type="text" id="empSearch"
+                 placeholder="Buscar por nombre o codigo..."
+                 oninput="filtrarTablaEmpleados()" />
+          <select class="filter-select" id="empFiltroEstado" onchange="filtrarTablaEmpleados()">
+            <option value="">Todos</option>
+            <option value="ACTIVO">Activos</option>
+            <option value="INACTIVO">Inactivos</option>
+          </select>
+          <select class="filter-select" id="empFiltroSector" onchange="filtrarTablaEmpleados()">
+            <option value="">Todos los sectores</option>
+            <option>Deposito</option>
+            <option>Ventas</option>
+            <option>Reparto</option>
+            <option>Administracion</option>
+          </select>
+        </div>
+        <button class="btn-new" onclick="abrirModalNuevo()">+ Nuevo empleado</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="emp-stats">
+        <div class="rstat">
+          <div class="rnum" id="empTotalActivos">--</div>
+          <div class="rlbl">Activos</div>
+        </div>
+        <div class="rstat">
+          <div class="rnum" id="empTotalInactivos">--</div>
+          <div class="rlbl">Inactivos</div>
+        </div>
+        <div class="rstat">
+          <div class="rnum" id="empTotalSectores">--</div>
+          <div class="rlbl">Sectores</div>
+        </div>
+        <div class="rstat">
+          <div class="rnum" id="empTotal">--</div>
+          <div class="rlbl">Total empleados</div>
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="table-card">
+        <div class="table-header">Listado de empleados</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Codigo</th>
+              <th>Nombre</th>
+              <th>Sector</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaEmpleados">
+            <tr><td colspan="5" class="empty-state">Cargue los empleados para ver el listado</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /panelEmpleados -->
+
+    <!-- Modal nuevo/editar empleado -->
+    <div class="modal-overlay" id="modalEmpleado">
+      <div class="modal">
+        <h3 id="modalTitulo">Nuevo empleado</h3>
+        <div class="modal-fields">
+          <div class="modal-field">
+            <label>Codigo</label>
+            <input type="text" id="mCodigo" placeholder="Ej: 10000101" inputmode="numeric" />
+          </div>
+          <div class="modal-field">
+            <label>Nombre completo</label>
+            <input type="text" id="mNombre" placeholder="Apellido Nombre" />
+          </div>
+          <div class="modal-field">
+            <label>Sector</label>
+            <select id="mSector">
+              <option>Deposito</option>
+              <option>Ventas</option>
+              <option>Reparto</option>
+              <option>Administracion</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label>Estado</label>
+            <select id="mEstado">
+              <option value="ACTIVO">Activo</option>
+              <option value="INACTIVO">Inactivo</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="cerrarModal('modalEmpleado')">Cancelar</button>
+          <button class="btn-save" onclick="guardarEmpleado()">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal credencial -->
+    <div class="modal-overlay" id="modalCredencial">
+      <div class="modal-cred">
+        <h3>Credencial del empleado</h3>
+        <div class="cred-preview">
+          <canvas id="carnetCanvas" width="300" height="480"></canvas>
+        </div>
+        <div class="cred-actions">
+          <button class="btn-cred-dl" onclick="descargarCredencial()">Descargar PNG</button>
+          <button class="btn-cred-wa" onclick="compartirWhatsApp()">Enviar por WhatsApp</button>
+          <button class="btn-cancel"  onclick="cerrarModal('modalCredencial')">Cerrar</button>
+        </div>
+      </div>
+    </div>
+      <div class="modal modal-confirm">
+        <h3>Confirmar baja</h3>
+        <p>Esta por dar de baja a <strong id="bajaEmpleadoNombre"></strong>. El empleado quedara inactivo y no podra fichar asistencia.</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="cerrarModal('modalBaja')">Cancelar</button>
+          <button class="btn-save" style="background:var(--red)" onclick="confirmarBaja()">Dar de baja</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+  // ══════════════════════════════════════════════════════════════
+  //  CONFIG
+  // ══════════════════════════════════════════════════════════════
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzV8EHmTRuiYRqEYCM5MMeq__l7FWi7mpGb3U04tbX0jZi-uFKEcPcqLu_97cwK797s/exec';
+  const SECRET_KEY      = 'ZRoTWkPTq44048';
+  const PASS            = 'black/7889/BLACK';
+
+  function toggleSidebar() {
+    const sb  = document.getElementById('sidebar');
+    const btn = document.getElementById('sidebarToggle');
+    sb.classList.toggle('collapsed');
+    btn.classList.toggle('collapsed-btn');
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  PANTALLA COMPLETA
+  // ══════════════════════════════════════════════════════════════
+  function toggleFullscreen() {
+    const el  = document.documentElement;
+    const btn = document.getElementById('btnFullscreen');
+    const ico = document.getElementById('fsIcon');
+
+    if (!document.fullscreenElement) {
+      el.requestFullscreen && el.requestFullscreen();
+      btn.innerHTML = '<svg id="fsIcon" viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/></svg> Salir';
+    } else {
+      document.exitFullscreen && document.exitFullscreen();
+      btn.innerHTML = '<svg id="fsIcon" viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg> Pantalla completa';
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  LOGIN
+  // ══════════════════════════════════════════════════════════════
+  function intentarLogin() {
+    const p   = document.getElementById('loginPass').value.trim();
+    const err = document.getElementById('loginError');
+    if (p === PASS) {
+      sessionStorage.setItem('auth', '1');
+      document.getElementById('loginScreen').classList.add('hidden');
+      err.textContent = '';
+      setTimeout(() => input.focus(), 100);
+    } else {
+      err.textContent = 'Contrasena incorrecta';
+      document.getElementById('loginPass').value = '';
+    }
+  }
+  document.getElementById('loginPass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') intentarLogin();
+  });
+  if (sessionStorage.getItem('auth') === '1') {
+    document.getElementById('loginScreen').classList.add('hidden');
+  }
+
+  function cerrarSesion() {
+    sessionStorage.removeItem('auth');
+    location.reload();
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  NAVEGACION
+  // ══════════════════════════════════════════════════════════════
+  const titles = { scanner: 'Scanner', reportes: 'Reportes', empleados: 'Empleados' };
+
+  function showPanel(id, btn) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel' + id.charAt(0).toUpperCase() + id.slice(1)).classList.add('active');
+    btn.classList.add('active');
+    document.getElementById('pageTitle').textContent = titles[id];
+    if (id === 'scanner')   setTimeout(() => input.focus(), 100);
+    if (id === 'empleados') actualizarStatsEmpleados();
+  }
+
+  function showTab(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  RELOJ
+  // ══════════════════════════════════════════════════════════════
+  function actualizarReloj() {
+    const now = new Date();
+    document.getElementById('reloj').textContent =
+      now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    document.getElementById('fecha').textContent =
+      now.toLocaleDateString('es-AR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+  actualizarReloj();
+  setInterval(actualizarReloj, 1000);
+
+  // ══════════════════════════════════════════════════════════════
+  //  FOCO AUTOMATICO
+  // ══════════════════════════════════════════════════════════════
+  const input = document.getElementById('codigoInput');
+
+  function mantenerFoco() {
+    const loginVisible = !document.getElementById('loginScreen').classList.contains('hidden');
+    const scannerActivo = document.getElementById('panelScanner').classList.contains('active');
+    if (loginVisible || !scannerActivo) return;
+    if (document.activeElement !== document.getElementById('btnActualizar')) input.focus();
+  }
+
+  document.addEventListener('click', mantenerFoco);
+  document.addEventListener('keydown', e => {
+    const loginVisible  = !document.getElementById('loginScreen').classList.contains('hidden');
+    const scannerActivo = document.getElementById('panelScanner').classList.contains('active');
+    if (!loginVisible && scannerActivo) input.focus();
+  });
+
+  // ══════════════════════════════════════════════════════════════
+  //  ANTI DOBLE ESCANEO — bloquea el mismo código por 3 segundos
+  // ══════════════════════════════════════════════════════════════
+  const ultimoScaneo = {}; // { codigo: timestamp }
+
+  function esDuplicado(codigo) {
+    const ahora = Date.now();
+    if (ultimoScaneo[codigo] && (ahora - ultimoScaneo[codigo]) < 3000) {
+      return true;
+    }
+    ultimoScaneo[codigo] = ahora;
+    return false;
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  CACHE DE EMPLEADOS — sessionStorage con expiración 4 horas
+  // ══════════════════════════════════════════════════════════════
+  const CACHE_KEY = 'empleados_cache';
+  const CACHE_TTL = 4 * 60 * 60 * 1000; // 4 horas en ms
+
+  function guardarCache(data) {
+    try {
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+        timestamp: Date.now(),
+        empleados: data
+      }));
+    } catch(e) {}
+  }
+
+  function cargarCache() {
+    try {
+      const raw = sessionStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      const cache = JSON.parse(raw);
+      if (Date.now() - cache.timestamp > CACHE_TTL) {
+        sessionStorage.removeItem(CACHE_KEY);
+        return null;
+      }
+      return cache.empleados;
+    } catch(e) { return null; }
+  }
+
+  function aplicarEmpleados(data) {
+    empleados = {};
+    data.forEach(emp => {
+      empleados[String(emp.codigo).trim()] = {
+        nombre: emp.nombre,
+        sector: emp.sector,
+        estado: String(emp.estado).trim().toUpperCase()
+      };
+    });
+    estadoDia = {};
+    actualizarContador();
+
+    const total = Object.keys(empleados).length;
+    const st = document.getElementById('statusEmpleados');
+    st.textContent = total + ' empleados cargados';
+    st.className = 'loaded';
+
+    // Cargar select de filtros en reportes
+    const sel = document.getElementById('fEmpleado');
+    sel.innerHTML = '<option value="">Todos</option>';
+    Object.entries(empleados).forEach(([cod, e]) => {
+      const o = document.createElement('option');
+      o.value = cod; o.textContent = e.nombre;
+      sel.appendChild(o);
+    });
+  }
+
+  // Intentar cargar desde cache al iniciar
+  function iniciarCache() {
+    const cached = cargarCache();
+    if (cached) {
+      aplicarEmpleados(cached);
+      mostrarMensaje('ok', 'Empleados cargados desde cache');
+      setTimeout(() => input.focus(), 100);
+    }
+  }
+  // ══════════════════════════════════════════════════════════════
+  let empleados  = {};
+  let estadoDia  = {};
+  let movimientos = [];
+
+  // ══════════════════════════════════════════════════════════════
+  //  SONIDO
+  // ══════════════════════════════════════════════════════════════
+  function beep(tipo) {
+    try {
+      const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      if (tipo === 'ingreso') {
+        osc.frequency.setValueAtTime(523, ctx.currentTime);
+        osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
+      } else {
+        osc.frequency.setValueAtTime(659, ctx.currentTime);
+        osc.frequency.setValueAtTime(392, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.35);
+      }
+    } catch(e) {}
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  CONTADOR PRESENTES
+  // ══════════════════════════════════════════════════════════════
+  function actualizarContador() {
+    const activos   = Object.keys(empleados).filter(c => empleados[c].estado === 'ACTIVO');
+    const presentes = Object.values(estadoDia).filter(v => v === 'INGRESO').length;
+    const total     = activos.length;
+    document.getElementById('cntPresentes').textContent = presentes;
+    document.getElementById('cntAusentes').textContent  = Math.max(total - presentes, 0);
+    document.getElementById('cntTotal').textContent     = total;
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  CARGAR EMPLEADOS (JSONP)
+  // ══════════════════════════════════════════════════════════════
+  function cargarEmpleados() {
+    const btn  = document.getElementById('btnActualizar');
+    const icon = document.getElementById('btnIcon');
+    btn.disabled = true;
+    icon.classList.add('spin');
+    mostrarMensaje('warn', 'Cargando empleados...');
+
+    const old = document.getElementById('jsonp_script');
+    if (old) old.remove();
+    if (window.__jsonpCallback) delete window.__jsonpCallback;
+
+    const timer = setTimeout(() => {
+      btn.disabled = false; icon.classList.remove('spin');
+      mostrarMensaje('error', 'Timeout: no se pudo contactar al servidor');
+      setTimeout(() => input.focus(), 100);
+    }, 10000);
+
+    window.__jsonpCallback = function(data) {
+      clearTimeout(timer);
+      btn.disabled = false; icon.classList.remove('spin');
+      try {
+        if (!data.ok) throw new Error(data.error || 'Error desconocido');
+        aplicarEmpleados(data.empleados);
+        guardarCache(data.empleados); // guardar en cache
+        const total = Object.keys(empleados).length;
+        mostrarMensaje('ok', total + ' empleados cargados correctamente');
+      } catch(err) {
+        mostrarMensaje('error', 'Error: ' + err.message);
+      }
+      setTimeout(() => input.focus(), 100);
+    };
+
+    const s = document.createElement('script');
+    s.id  = 'jsonp_script';
+    s.src = `${APPS_SCRIPT_URL}?action=getEmpleados&key=${SECRET_KEY}&callback=__jsonpCallback`;
+    s.onerror = () => {
+      clearTimeout(timer);
+      btn.disabled = false; icon.classList.remove('spin');
+      mostrarMensaje('error', 'Error de red');
+      setTimeout(() => input.focus(), 100);
+    };
+    document.body.appendChild(s);
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  SCAN — Enter
+  // ══════════════════════════════════════════════════════════════
+  input.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const codigo = input.value.trim();
+      input.value = '';
+      if (!codigo) return;
+      await procesarCodigo(codigo);
+      setTimeout(() => input.focus(), 100);
+    }
+  });
+
+  async function procesarCodigo(codigo) {
+    if (Object.keys(empleados).length === 0) {
+      mostrarMensaje('error', 'Primero actualice la lista de empleados'); return;
+    }
+
+    // Anti doble escaneo
+    if (esDuplicado(codigo)) {
+      mostrarMensaje('warn', 'Lectura duplicada ignorada — espere un momento');
+      return;
+    }
+
+    const emp = empleados[codigo];
+    if (!emp)                        { mostrarMensaje('error', 'Codigo no encontrado: ' + codigo); return; }
+    if (emp.estado !== 'ACTIVO')     { mostrarMensaje('warn',  emp.nombre + ' esta inactivo'); return; }
+
+    mostrarMensaje('warn', 'Registrando...');
+    try {
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'registrarAsistencia', codigo, key: SECRET_KEY })
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Error al registrar');
+
+      const tipo = data.movimiento.toUpperCase();
+      mostrarMensaje('ok', tipo + ' — ' + emp.nombre + ' (' + emp.sector + ')');
+      beep(tipo === 'INGRESO' ? 'ingreso' : 'salida');
+      estadoDia[codigo] = tipo;
+      actualizarContador();
+      agregarMovimiento({ hora: new Date().toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}), codigo, nombre: emp.nombre, sector: emp.sector, movimiento: tipo });
+    } catch(err) {
+      mostrarMensaje('error', 'Error: ' + err.message);
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  MENSAJE
+  // ══════════════════════════════════════════════════════════════
+  function mostrarMensaje(tipo, texto) {
+    const el = document.getElementById('mensaje');
+    el.className = tipo;
+    el.textContent = texto;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.className = 'idle'; el.textContent = 'Listo para escanear'; }, 5000);
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  TABLA MOVIMIENTOS
+  // ══════════════════════════════════════════════════════════════
+  function agregarMovimiento(mov) {
+    movimientos.unshift(mov);
+    if (movimientos.length > 20) movimientos.pop();
+    document.getElementById('tablaBody').innerHTML = movimientos.map(m => `
+      <tr>
+        <td>${m.hora}</td>
+        <td style="font-family:monospace">${m.codigo}</td>
+        <td>${m.nombre}</td>
+        <td style="color:var(--muted)">${m.sector}</td>
+        <td><span class="badge ${m.movimiento.toLowerCase()}">${m.movimiento}</span></td>
+      </tr>`).join('');
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  CREDENCIAL — dibuja el carnet en Canvas y genera QR
+  // ══════════════════════════════════════════════════════════════
+  let credEmpleadoCodigo = null;
+
+  function abrirCredencial(cod) {
+    credEmpleadoCodigo = cod;
+    document.getElementById('modalCredencial').classList.remove('hidden');
+    dibujarCarnet(cod);
+  }
+
+  function dibujarCarnet(cod) {
+    const emp    = empleados[cod];
+    const canvas = document.getElementById('carnetCanvas');
+    const ctx    = canvas.getContext('2d');
+    const W = 300, H = 500;
+    canvas.width  = W;
+    canvas.height = H;
+
+    ctx.save();
+    roundRect(ctx, 0, 0, W, H, 16);
+    ctx.clip();
+
+    // Fondo blanco
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Header negro
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, W, 90);
+
+    // Logo BLACK
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 28px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BLACK', W / 2, 44);
+    ctx.font = '11px Segoe UI, sans-serif';
+    ctx.fillStyle = '#8b949e';
+    ctx.fillText('MAYORISTA', W / 2, 64);
+
+    // Línea azul
+    ctx.fillStyle = '#1f6feb';
+    ctx.fillRect(0, 90, W, 3);
+
+    // Foto placeholder
+    const cx = W / 2, cy = 158, r = 50;
+    ctx.fillStyle = '#e8edf2';
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#d0d7de';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#9198a1';
+    ctx.beginPath();
+    ctx.arc(cx, cy - 10, 17, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 28, 25, 19, 0, Math.PI, 0);
+    ctx.fill();
+
+    // Nombre
+    ctx.fillStyle = '#0d1117';
+    ctx.font = 'bold 15px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText((emp?.nombre || '---').toUpperCase(), W / 2, 238);
+
+    // Sector
+    ctx.fillStyle = '#57606a';
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.fillText((emp?.sector || '').toUpperCase(), W / 2, 258);
+
+    // Separador
+    ctx.strokeStyle = '#d0d7de';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(40, 274); ctx.lineTo(W - 40, 274);
+    ctx.stroke();
+
+    // Código label
+    ctx.fillStyle = '#57606a';
+    ctx.font = '10px Segoe UI, sans-serif';
+    ctx.fillText('CODIGO DE EMPLEADO', W / 2, 294);
+
+    // Código valor
+    ctx.fillStyle = '#1f6feb';
+    ctx.font = 'bold 20px monospace';
+    ctx.fillText(cod, W / 2, 318);
+
+    ctx.restore();
+
+    // QR más grande (130x130)
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${cod}&bgcolor=ffffff&color=0d1117&format=png`;
+    const qrImg = new Image();
+    qrImg.crossOrigin = 'anonymous';
+    qrImg.onload = () => {
+      ctx.save();
+      roundRect(ctx, 0, 0, W, H, 16);
+      ctx.clip();
+      ctx.drawImage(qrImg, W / 2 - 65, 332, 130, 130);
+
+      // Footer
+      ctx.fillStyle = '#57606a';
+      ctx.font = '9px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('ESCANEAR PARA REGISTRAR ASISTENCIA', W / 2, 478);
+      ctx.restore();
+    };
+    qrImg.onerror = () => {
+      ctx.save();
+      roundRect(ctx, 0, 0, W, H, 16);
+      ctx.clip();
+      ctx.fillStyle = '#f0f0f0';
+      ctx.fillRect(W / 2 - 65, 332, 130, 130);
+      ctx.fillStyle = '#57606a';
+      ctx.font = '10px Segoe UI';
+      ctx.textAlign = 'center';
+      ctx.fillText('QR NO DISPONIBLE', W / 2, 400);
+      ctx.restore();
+    };
+    qrImg.src = qrUrl;
+  }
+
+  // Helper roundRect para canvas
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function descargarCredencial() {
+    const canvas = document.getElementById('carnetCanvas');
+    const emp    = empleados[credEmpleadoCodigo];
+    const nombre = (emp?.nombre || credEmpleadoCodigo).replace(/\s+/g, '_');
+    const link   = document.createElement('a');
+    link.download = `credencial_${nombre}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  function compartirWhatsApp() {
+    const canvas = document.getElementById('carnetCanvas');
+    const emp    = empleados[credEmpleadoCodigo];
+    const nombre = emp?.nombre || credEmpleadoCodigo;
+    // En mobile abre WhatsApp con mensaje, la imagen se descarga primero
+    descargarCredencial();
+    const texto = encodeURIComponent(`Credencial de empleado — ${nombre}\nCodigo: ${credEmpleadoCodigo}`);
+    setTimeout(() => {
+      window.open(`https://wa.me/?text=${texto}`, '_blank');
+    }, 500);
+  }
+  let empEditandoCodigo = null; // null = nuevo, string = editar
+  let empBajaCodigo     = null;
+
+  function renderTablaEmpleados(lista) {
+    const tbody = document.getElementById('tablaEmpleados');
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Sin resultados</td></tr>';
+      return;
+    }
+    tbody.innerHTML = lista.map(([cod, e]) => `
+      <tr>
+        <td style="font-family:monospace">${cod}</td>
+        <td>${e.nombre}</td>
+        <td style="color:var(--muted)">${e.sector}</td>
+        <td><span class="status-dot ${e.estado.toLowerCase()}">${e.estado === 'ACTIVO' ? 'Activo' : 'Inactivo'}</span></td>
+        <td style="display:flex;gap:4px;padding:8px 20px;flex-wrap:nowrap;align-items:center">
+          <button class="action-btn edit"  onclick="abrirModalEditar('${cod}')">Editar</button>
+          <button class="action-btn cred"  onclick="abrirCredencial('${cod}')">Credencial</button>
+          ${e.estado === 'ACTIVO'
+            ? `<button class="action-btn baja" onclick="abrirModalBaja('${cod}')">Dar de baja</button>`
+            : `<button class="action-btn alta" onclick="darDeAlta('${cod}')">Dar de alta</button>`
+          }
+        </td>
+      </tr>`).join('');
+  }
+
+  function actualizarStatsEmpleados() {
+    const todos     = Object.entries(empleados);
+    const activos   = todos.filter(([,e]) => e.estado === 'ACTIVO').length;
+    const inactivos = todos.filter(([,e]) => e.estado === 'INACTIVO').length;
+    const sectores  = new Set(todos.map(([,e]) => e.sector)).size;
+    document.getElementById('empTotalActivos').textContent   = activos;
+    document.getElementById('empTotalInactivos').textContent = inactivos;
+    document.getElementById('empTotalSectores').textContent  = sectores;
+    document.getElementById('empTotal').textContent          = todos.length;
+    renderTablaEmpleados(todos);
+  }
+
+  function filtrarTablaEmpleados() {
+    const q      = document.getElementById('empSearch').value.toLowerCase();
+    const estado = document.getElementById('empFiltroEstado').value;
+    const sector = document.getElementById('empFiltroSector').value;
+    const lista  = Object.entries(empleados).filter(([cod, e]) => {
+      const matchQ      = !q || e.nombre.toLowerCase().includes(q) || cod.includes(q);
+      const matchEstado = !estado || e.estado === estado;
+      const matchSector = !sector || e.sector === sector;
+      return matchQ && matchEstado && matchSector;
+    });
+    renderTablaEmpleados(lista);
+  }
+
+  // Abrir modal nuevo
+  function abrirModalNuevo() {
+    empEditandoCodigo = null;
+    document.getElementById('modalTitulo').textContent = 'Nuevo empleado';
+    document.getElementById('mCodigo').value  = '';
+    document.getElementById('mCodigo').disabled = false;
+    document.getElementById('mNombre').value  = '';
+    document.getElementById('mSector').value  = 'Deposito';
+    document.getElementById('mEstado').value  = 'ACTIVO';
+    document.getElementById('modalEmpleado').classList.remove('hidden');
+  }
+
+  // Abrir modal editar
+  function abrirModalEditar(cod) {
+    const e = empleados[cod];
+    if (!e) return;
+    empEditandoCodigo = cod;
+    document.getElementById('modalTitulo').textContent = 'Editar empleado';
+    document.getElementById('mCodigo').value    = cod;
+    document.getElementById('mCodigo').disabled = true; // no se puede cambiar el codigo
+    document.getElementById('mNombre').value    = e.nombre;
+    document.getElementById('mSector').value    = e.sector;
+    document.getElementById('mEstado').value    = e.estado;
+    document.getElementById('modalEmpleado').classList.remove('hidden');
+  }
+
+  // Guardar (nuevo o edición) — por ahora solo en memoria
+  function guardarEmpleado() {
+    const cod    = document.getElementById('mCodigo').value.trim();
+    const nombre = document.getElementById('mNombre').value.trim();
+    const sector = document.getElementById('mSector').value;
+    const estado = document.getElementById('mEstado').value;
+
+    if (!cod || !nombre) { alert('Complete codigo y nombre'); return; }
+
+    empleados[cod] = { nombre, sector, estado };
+    guardarCache(Object.entries(empleados).map(([codigo, e]) => ({ codigo, ...e })));
+    actualizarStatsEmpleados();
+    cerrarModal('modalEmpleado');
+  }
+
+  // Baja
+  function abrirModalBaja(cod) {
+    empBajaCodigo = cod;
+    const emp = empleados[cod];
+    const nombre = emp?.nombre || emp?.Nombre || cod;
+    document.getElementById('bajaEmpleadoNombre').textContent = nombre;
+    document.getElementById('modalBaja').classList.remove('hidden');
+  }
+  function confirmarBaja() {
+    if (empBajaCodigo && empleados[empBajaCodigo]) {
+      empleados[empBajaCodigo].estado = 'INACTIVO';
+      guardarCache(Object.entries(empleados).map(([codigo, e]) => ({ codigo, ...e })));
+      actualizarStatsEmpleados();
+      actualizarContador();
+    }
+    cerrarModal('modalBaja');
+  }
+
+  // Alta
+  function darDeAlta(cod) {
+    if (empleados[cod]) {
+      empleados[cod].estado = 'ACTIVO';
+      guardarCache(Object.entries(empleados).map(([codigo, e]) => ({ codigo, ...e })));
+      actualizarStatsEmpleados();
+      actualizarContador();
+    }
+  }
+
+  function cerrarModal(id) {
+    document.getElementById(id).classList.add('hidden');
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  REPORTES — placeholder
+  // ══════════════════════════════════════════════════════════════
+  function aplicarFiltro() {
+    // Por implementar — conectar con Apps Script
+    document.getElementById('rTotalDias').textContent  = '--';
+    document.getElementById('rTotalHoras').textContent = '--';
+    document.getElementById('rPromHoras').textContent  = '--';
+    document.getElementById('rAusencias').textContent  = '--';
+  }
+
+  function exportarExcel() {
+    // Por implementar
+    alert('Exportacion proximamente disponible');
+  }
+
+  // Setear fechas por defecto (hoy)
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('fDesde').value = hoy;
+  document.getElementById('fHasta').value = hoy;
+
+  // Cargar empleados desde cache si está disponible
+  if (sessionStorage.getItem('auth') === '1') iniciarCache();
+</script>
+</body>
+</html>
