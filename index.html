@@ -970,8 +970,43 @@
     .absent-wrap { padding: 16px 20px; display: flex; flex-wrap: wrap; }
 
     /* ══════════════════════════════════════
-       VISTA EN VIVO
+       INDICADOR OFFLINE
     ══════════════════════════════════════ */
+    #offlineBanner {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 20px;
+      background: #2d2214;
+      border-bottom: 1px solid var(--yellow);
+      font-size: 0.8rem;
+      color: var(--yellow-t);
+      flex-shrink: 0;
+    }
+    #offlineBanner.visible { display: flex; }
+    #offlineBanner svg {
+      width: 14px; height: 14px;
+      stroke: currentColor; fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+    #offlineBanner .pending-count {
+      font-weight: 700;
+      font-family: monospace;
+    }
+    #offlineBanner .sync-btn {
+      margin-left: auto;
+      padding: 4px 12px;
+      background: transparent;
+      border: 1px solid var(--yellow);
+      border-radius: 5px;
+      color: var(--yellow-t);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    #offlineBanner .sync-btn:hover { background: var(--yellow); color: #000; }
     .vivo-toolbar {
       display: flex;
       align-items: center;
@@ -1178,7 +1213,7 @@
     <div class="sidebar-brand">
       <h1>BLACK</h1>
       <p>Asistencia</p>
-      <span style="font-size:0.62rem;color:#444d56;margin-top:4px;display:block;letter-spacing:1px">VERSION 1.73</span>
+      <span style="font-size:0.62rem;color:#444d56;margin-top:4px;display:block;letter-spacing:1px">VERSION 1.75</span>
     </div>
     <nav class="sidebar-nav">
       <button class="nav-item active" onclick="showPanel('scanner', this)">
@@ -1227,6 +1262,13 @@
           <span id="fecha">---</span>
         </div>
       </div>
+    </div>
+
+    <!-- Banner offline -->
+    <div id="offlineBanner">
+      <svg viewBox="0 0 24 24"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+      <span>Sin conexión — <span class="pending-count" id="pendingCount">0</span> scan(s) pendientes de sincronizar</span>
+      <button class="sync-btn" onclick="sincronizarCola()">Sincronizar ahora</button>
     </div>
 
     <!-- Panel Scanner -->
@@ -1691,8 +1733,113 @@
   setInterval(actualizarReloj, 1000);
 
   // ══════════════════════════════════════════════════════════════
-  //  SCANNER ACTIVO — LED + pulso borde + radar + matrix + scanline
+  //  COLA OFFLINE
   // ══════════════════════════════════════════════════════════════
+  const COLA_KEY = 'cola_offline';
+  let estaOnline = navigator.onLine;
+  let sincronizando = false;
+
+  function cargarCola() {
+    try { return JSON.parse(localStorage.getItem(COLA_KEY) || '[]'); } catch(e) { return []; }
+  }
+  function guardarCola(cola) {
+    try { localStorage.setItem(COLA_KEY, JSON.stringify(cola)); } catch(e) {}
+  }
+  function agregarACola(codigo, timestamp) {
+    const cola = cargarCola();
+    cola.push({ codigo, timestamp, intentos: 0 });
+    guardarCola(cola);
+    actualizarBannerOffline();
+  }
+  function actualizarBannerOffline() {
+    const cola    = cargarCola();
+    const banner  = document.getElementById('offlineBanner');
+    const cnt     = document.getElementById('pendingCount');
+    cnt.textContent = cola.length;
+    if (!estaOnline || cola.length > 0) {
+      banner.classList.add('visible');
+    } else {
+      banner.classList.remove('visible');
+    }
+  }
+
+  async function sincronizarCola() {
+    if (sincronizando) return;
+    const cola = cargarCola();
+    if (!cola.length) { actualizarBannerOffline(); return; }
+
+    sincronizando = true;
+    const btn = document.querySelector('#offlineBanner .sync-btn');
+    if (btn) { btn.textContent = 'Sincronizando...'; btn.disabled = true; }
+
+    const pendientes = [...cola];
+    const procesados = [];
+
+    for (const item of pendientes) {
+      try {
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 15000);
+        const res  = await fetch(APPS_SCRIPT_URL, {
+          method:  'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body:    JSON.stringify({ action: 'registrarAsistencia', codigo: item.codigo, key: SECRET_KEY }),
+          signal:  controller.signal
+        });
+        clearTimeout(tid);
+        const data = await res.json();
+        if (data.ok) {
+          procesados.push(item);
+          // Agregar a tabla de movimientos
+          const emp = empleados[item.codigo];
+          if (emp) {
+            const hora = new Date(item.timestamp).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12: false });
+            agregarMovimiento({ hora, codigo: item.codigo, nombre: emp.nombre, sector: emp.sector, movimiento: data.movimiento.toUpperCase() });
+            estadoDia[item.codigo] = data.movimiento.toUpperCase();
+            actualizarContador();
+          }
+        }
+      } catch(e) {
+        // Si falla, lo dejamos en la cola
+      }
+    }
+
+    // Quitar los procesados de la cola
+    const nuevaCola = cargarCola().filter(i =>
+      !procesados.find(p => p.codigo === i.codigo && p.timestamp === i.timestamp)
+    );
+    guardarCola(nuevaCola);
+    sincronizando = false;
+    if (btn) { btn.textContent = 'Sincronizar ahora'; btn.disabled = false; }
+    actualizarBannerOffline();
+
+    if (nuevaCola.length === 0) {
+      mostrarMensaje('ok', 'Cola sincronizada correctamente');
+    } else {
+      mostrarMensaje('warn', nuevaCola.length + ' scan(s) no se pudieron sincronizar');
+    }
+  }
+
+  // Detectar cambios de conectividad
+  window.addEventListener('online',  () => {
+    estaOnline = true;
+    actualizarBannerOffline();
+    // Auto-sincronizar al volver la conexión
+    const cola = cargarCola();
+    if (cola.length > 0) {
+      mostrarMensaje('warn', 'Conexión restaurada — sincronizando ' + cola.length + ' scan(s)...');
+      setTimeout(sincronizarCola, 1500);
+    } else {
+      mostrarMensaje('ok', 'Conexión restaurada');
+      document.getElementById('offlineBanner').classList.remove('visible');
+    }
+  });
+  window.addEventListener('offline', () => {
+    estaOnline = false;
+    actualizarBannerOffline();
+    mostrarMensaje('warn', 'Sin conexión — los scans se guardan localmente');
+  });
+
+
 
   // ── Matrix rain ──
   const matrixCanvas = document.getElementById('matrixCanvas');
@@ -1849,14 +1996,99 @@
     if (cached) {
       aplicarEmpleados(cached);
       mostrarMensaje('ok', 'Empleados cargados desde cache');
-      sincronizarEstadoDia(); // ── Corrección 3: sync estado del día
+      sincronizarEstadoDia();
+      // Cargar movimientos: primero localStorage, luego Sheets
+      movimientos = cargarMovimientosLocal();
+      renderTablaMovimientos();
+      cargarMovimientosDesdeSheets();
       setTimeout(() => input.focus(), 100);
     }
   }
 
   // ══════════════════════════════════════════════════════════════
-  //  ESTADO GLOBAL
+  //  MOVIMIENTOS — localStorage + Sheets al cargar
   // ══════════════════════════════════════════════════════════════
+  const MOV_KEY = 'movimientos_cache';
+  const HOY_KEY = 'movimientos_fecha';
+
+  function guardarMovimientosLocal(lista) {
+    try {
+      const hoy = new Date().toISOString().split('T')[0];
+      localStorage.setItem(MOV_KEY,  JSON.stringify(lista));
+      localStorage.setItem(HOY_KEY,  hoy);
+    } catch(e) {}
+  }
+
+  function cargarMovimientosLocal() {
+    try {
+      const hoy       = new Date().toISOString().split('T')[0];
+      const fechaGuard = localStorage.getItem(HOY_KEY);
+      // Si son de otro día, descartar
+      if (fechaGuard !== hoy) {
+        localStorage.removeItem(MOV_KEY);
+        localStorage.removeItem(HOY_KEY);
+        return [];
+      }
+      const raw = localStorage.getItem(MOV_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch(e) { return []; }
+  }
+
+  function cargarMovimientosDesdeSheets() {
+    const old = document.getElementById('jsonp_mov');
+    if (old) old.remove();
+    if (window.__jsonpMov) delete window.__jsonpMov;
+
+    window.__jsonpMov = function(data) {
+      if (!data.ok || !data.movimientos || !data.movimientos.length) return;
+
+      // Tomar los últimos 20 movimientos de hoy desde Sheets
+      const ultimos = data.movimientos.slice(-20).reverse();
+      movimientos = ultimos.map(m => ({
+        hora:       typeof m.hora === 'string' ? m.hora.substring(0,8) : m.hora,
+        codigo:     m.codigo,
+        nombre:     m.nombre,
+        sector:     m.sector,
+        movimiento: m.tipo
+      }));
+
+      // Fusionar con localStorage — evitar duplicados por timestamp
+      const local = cargarMovimientosLocal();
+      const codsSheets = new Set(movimientos.map(m => m.hora + m.codigo));
+      local.forEach(m => {
+        if (!codsSheets.has(m.hora + m.codigo)) movimientos.push(m);
+      });
+
+      // Mantener solo los 20 más recientes
+      movimientos = movimientos.slice(0, 20);
+      guardarMovimientosLocal(movimientos);
+      renderTablaMovimientos();
+    };
+
+    const s = document.createElement('script');
+    s.id  = 'jsonp_mov';
+    s.src = `${APPS_SCRIPT_URL}?action=getMovimientosHoy&key=${SECRET_KEY}&callback=__jsonpMov`;
+    s.onerror = () => console.warn('[movimientos] No se pudo cargar desde Sheets');
+    document.body.appendChild(s);
+  }
+
+  function renderTablaMovimientos() {
+    if (!movimientos.length) {
+      document.getElementById('tablaBody').innerHTML =
+        '<tr><td colspan="5" class="empty-state">Sin registros</td></tr>';
+      return;
+    }
+    document.getElementById('tablaBody').innerHTML = movimientos.map(m => `
+      <tr>
+        <td>${m.hora}</td>
+        <td style="font-family:monospace">${m.codigo}</td>
+        <td>${m.nombre}</td>
+        <td style="color:var(--muted)">${m.sector}</td>
+        <td><span class="badge ${m.movimiento.toLowerCase()}">${m.movimiento}</span></td>
+      </tr>`).join('');
+  }
+
+  // Estado global
   let empleados   = {};
   let estadoDia   = {};
   let movimientos = [];
@@ -1926,7 +2158,10 @@
         if (!data.ok) throw new Error(data.error || 'Error desconocido');
         aplicarEmpleados(data.empleados);
         guardarCache(data.empleados);
-        sincronizarEstadoDia(); // ── Corrección 3: sync estado del día
+        sincronizarEstadoDia();
+        movimientos = cargarMovimientosLocal();
+        renderTablaMovimientos();
+        cargarMovimientosDesdeSheets();
         const total = Object.keys(empleados).length;
         mostrarMensaje('ok', total + ' empleados cargados correctamente');
       } catch(err) {
@@ -2001,7 +2236,23 @@
     if (!emp)                    { mostrarMensaje('error', 'Codigo no encontrado: ' + codigo); return; }
     if (emp.estado !== 'ACTIVO') { mostrarMensaje('warn',  emp.nombre + ' esta inactivo'); return; }
 
-    // ── Corrección 2: contador de segundos visible ──
+    // ── Sin internet: guardar en cola offline ──
+    if (!navigator.onLine) {
+      const ts   = Date.now();
+      const hora = new Date(ts).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12: false });
+      // Determinar movimiento localmente
+      const ultimoLocal = estadoDia[codigo];
+      const tipoLocal   = (!ultimoLocal || ultimoLocal === 'SALIDA') ? 'INGRESO' : 'SALIDA';
+      estadoDia[codigo] = tipoLocal;
+      actualizarContador();
+      agregarMovimiento({ hora, codigo, nombre: emp.nombre, sector: emp.sector, movimiento: tipoLocal });
+      agregarACola(codigo, ts);
+      beep(tipoLocal === 'INGRESO' ? 'ingreso' : 'salida');
+      mostrarMensaje('warn', tipoLocal + ' (offline) — ' + emp.nombre + ' · guardado localmente');
+      return;
+    }
+
+    // ── Con internet: flujo normal ──
     let segundos = 0;
     const timerInterval = setInterval(() => {
       segundos++;
@@ -2014,7 +2265,6 @@
     mostrarMensajePuro('pending', 'Registrando');
 
     try {
-      // ── Corrección 1: timeout explícito de 15 segundos ──
       const controller = new AbortController();
       const timeoutId  = setTimeout(() => controller.abort(), 15000);
 
@@ -2041,8 +2291,18 @@
       });
     } catch(err) {
       clearInterval(timerInterval);
-      if (err.name === 'AbortError') {
-        mostrarMensaje('error', 'Timeout — el servidor tardó demasiado. Verifique en la planilla.');
+      // Si falló por red, guardar en cola
+      if (err.name === 'AbortError' || !navigator.onLine) {
+        const ts   = Date.now();
+        const hora = new Date(ts).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12: false });
+        const ultimoLocal = estadoDia[codigo];
+        const tipoLocal   = (!ultimoLocal || ultimoLocal === 'SALIDA') ? 'INGRESO' : 'SALIDA';
+        estadoDia[codigo] = tipoLocal;
+        actualizarContador();
+        agregarMovimiento({ hora, codigo, nombre: emp.nombre, sector: emp.sector, movimiento: tipoLocal });
+        agregarACola(codigo, ts);
+        beep(tipoLocal === 'INGRESO' ? 'ingreso' : 'salida');
+        mostrarMensaje('warn', tipoLocal + ' (offline) — ' + emp.nombre + ' · guardado localmente');
       } else {
         mostrarMensaje('error', 'Error: ' + err.message);
       }
@@ -2074,14 +2334,8 @@
   function agregarMovimiento(mov) {
     movimientos.unshift(mov);
     if (movimientos.length > 20) movimientos.pop();
-    document.getElementById('tablaBody').innerHTML = movimientos.map(m => `
-      <tr>
-        <td>${m.hora}</td>
-        <td style="font-family:monospace">${m.codigo}</td>
-        <td>${m.nombre}</td>
-        <td style="color:var(--muted)">${m.sector}</td>
-        <td><span class="badge ${m.movimiento.toLowerCase()}">${m.movimiento}</span></td>
-      </tr>`).join('');
+    guardarMovimientosLocal(movimientos);
+    renderTablaMovimientos();
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -2480,6 +2734,9 @@
   const hoy = new Date().toISOString().split('T')[0];
   document.getElementById('fDesde').value = hoy;
   document.getElementById('fHasta').value = hoy;
+
+  // Verificar cola pendiente al iniciar
+  actualizarBannerOffline();
 
   // Cargar desde cache al iniciar
   if (sessionStorage.getItem('auth') === '1') iniciarCache();
