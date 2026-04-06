@@ -394,6 +394,16 @@
     #mensaje.ok    { background: #0d2818; border: 1px solid var(--green); color: var(--green-t); }
     #mensaje.error { background: #2d1216; border: 1px solid var(--red);   color: var(--red-t); }
     #mensaje.warn  { background: #2d2214; border: 1px solid var(--yellow);color: var(--yellow-t); }
+    #mensaje.pending { background: #0d1e38; border: 1px solid var(--accent); color: #7dd3fc; }
+
+    /* Contador segundos dentro del mensaje */
+    .msg-timer {
+      display: inline-block;
+      font-size: 0.78rem;
+      opacity: .7;
+      margin-left: 8px;
+      font-family: monospace;
+    }
 
     .btn-secondary {
       padding: 11px 16px;
@@ -985,7 +995,7 @@
     <div class="sidebar-brand">
       <h1>BLACK</h1>
       <p>Asistencia</p>
-      <span style="font-size:0.62rem;color:#444d56;margin-top:4px;display:block;letter-spacing:1px">VERSION 1.70</span>
+      <span style="font-size:0.62rem;color:#444d56;margin-top:4px;display:block;letter-spacing:1px">VERSION 1.71</span>
     </div>
     <nav class="sidebar-nav">
       <button class="nav-item active" onclick="showPanel('scanner', this)">
@@ -1339,7 +1349,7 @@
   // ══════════════════════════════════════════════════════════════
   //  CONFIG
   // ══════════════════════════════════════════════════════════════
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzV8EHmTRuiYRqEYCM5MMeq__l7FWi7mpGb3U04tbX0jZi-uFKEcPcqLu_97cwK797s/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2WS_g8kaxKaAxqXKdhY94XhFEyEAV25vKOrWxHX3hqOuyDt_yuoxGPaRZWQ4POGqN/exec';
   const SECRET_KEY      = 'ZRoTWkPTq44048';
   const PASS            = 'black/7889/BLACK';
 
@@ -1580,6 +1590,7 @@
     if (cached) {
       aplicarEmpleados(cached);
       mostrarMensaje('ok', 'Empleados cargados desde cache');
+      sincronizarEstadoDia(); // ── Corrección 3: sync estado del día
       setTimeout(() => input.focus(), 100);
     }
   }
@@ -1656,6 +1667,7 @@
         if (!data.ok) throw new Error(data.error || 'Error desconocido');
         aplicarEmpleados(data.empleados);
         guardarCache(data.empleados);
+        sincronizarEstadoDia(); // ── Corrección 3: sync estado del día
         const total = Object.keys(empleados).length;
         mostrarMensaje('ok', total + ' empleados cargados correctamente');
       } catch(err) {
@@ -1673,6 +1685,35 @@
       mostrarMensaje('error', 'Error de red');
       setTimeout(() => input.focus(), 100);
     };
+    document.body.appendChild(s);
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  SYNC ESTADO DIA — reconstruye quién ya fichó hoy al iniciar
+  // ══════════════════════════════════════════════════════════════
+  function sincronizarEstadoDia() {
+    const hoyStr = new Date().toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+    const old = document.getElementById('jsonp_sync');
+    if (old) old.remove();
+    if (window.__jsonpSync) delete window.__jsonpSync;
+
+    window.__jsonpSync = function(data) {
+      if (!data.ok || !data.movimientos) return;
+      // Reconstruir estadoDia desde los movimientos de hoy
+      const movHoy = data.movimientos.filter(m => m.fecha === hoyStr);
+      // Ordenar por hora para quedarse con el último movimiento de cada empleado
+      movHoy.sort((a, b) => a.hora > b.hora ? 1 : -1);
+      movHoy.forEach(m => {
+        estadoDia[String(m.codigo).trim()] = String(m.tipo).toUpperCase();
+      });
+      actualizarContador();
+      console.log('[sync] Estado del dia reconstruido —', Object.keys(estadoDia).length, 'empleados con movimiento hoy');
+    };
+
+    const s = document.createElement('script');
+    s.id  = 'jsonp_sync';
+    s.src = `${APPS_SCRIPT_URL}?action=getMovimientosHoy&key=${SECRET_KEY}&callback=__jsonpSync`;
+    s.onerror = () => console.warn('[sync] No se pudo sincronizar estado del dia');
     document.body.appendChild(s);
   }
 
@@ -1701,13 +1742,32 @@
     if (!emp)                    { mostrarMensaje('error', 'Codigo no encontrado: ' + codigo); return; }
     if (emp.estado !== 'ACTIVO') { mostrarMensaje('warn',  emp.nombre + ' esta inactivo'); return; }
 
-    mostrarMensaje('warn', 'Registrando...');
+    // ── Corrección 2: contador de segundos visible ──
+    let segundos = 0;
+    const timerInterval = setInterval(() => {
+      segundos++;
+      const el = document.getElementById('mensaje');
+      if (el.className === 'pending') {
+        el.innerHTML = `Registrando <span class="msg-timer">${segundos}s</span>`;
+      }
+    }, 1000);
+
+    mostrarMensajePuro('pending', 'Registrando');
+
     try {
+      // ── Corrección 1: timeout explícito de 15 segundos ──
+      const controller = new AbortController();
+      const timeoutId  = setTimeout(() => controller.abort(), 15000);
+
       const res = await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'registrarAsistencia', codigo, key: SECRET_KEY })
+        body: JSON.stringify({ action: 'registrarAsistencia', codigo, key: SECRET_KEY }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+      clearInterval(timerInterval);
+
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Error al registrar');
 
@@ -1721,7 +1781,12 @@
         codigo, nombre: emp.nombre, sector: emp.sector, movimiento: tipo
       });
     } catch(err) {
-      mostrarMensaje('error', 'Error: ' + err.message);
+      clearInterval(timerInterval);
+      if (err.name === 'AbortError') {
+        mostrarMensaje('error', 'Timeout — el servidor tardó demasiado. Verifique en la planilla.');
+      } else {
+        mostrarMensaje('error', 'Error: ' + err.message);
+      }
     }
   }
 
@@ -1734,6 +1799,14 @@
     el.textContent = texto;
     clearTimeout(el._t);
     el._t = setTimeout(() => { el.className = 'idle'; el.textContent = 'Listo para escanear'; }, 5000);
+  }
+
+  // Sin auto-clear — para el estado pending con contador
+  function mostrarMensajePuro(tipo, texto) {
+    const el = document.getElementById('mensaje');
+    clearTimeout(el._t);
+    el.className = tipo;
+    el.textContent = texto;
   }
 
   // ══════════════════════════════════════════════════════════════
