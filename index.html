@@ -968,6 +968,189 @@
       margin: 4px;
     }
     .absent-wrap { padding: 16px 20px; display: flex; flex-wrap: wrap; }
+
+    /* ══════════════════════════════════════
+       VISTA EN VIVO
+    ══════════════════════════════════════ */
+    .vivo-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .vivo-toolbar-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .vivo-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .vivo-update-info {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .vivo-toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-vivo-refresh {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 20px;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-vivo-refresh:hover { background: var(--accent-h); }
+    .btn-vivo-refresh:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-vivo-refresh svg {
+      width: 14px; height: 14px;
+      stroke: currentColor; fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .btn-vivo-refresh.loading svg { animation: spin .7s linear infinite; }
+
+    .vivo-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .vivo-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .vivo-stat.green { border-color: var(--green); }
+    .vivo-stat.green .vivo-num { color: var(--green-t); }
+    .vivo-stat.red   { border-color: var(--red); }
+    .vivo-stat.red   .vivo-num { color: var(--red-t); }
+    .vivo-stat.yellow { border-color: var(--yellow); }
+    .vivo-stat.yellow .vivo-num { color: var(--yellow-t); }
+    .vivo-num {
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: monospace;
+      line-height: 1;
+    }
+    .vivo-lbl {
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .vivo-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      flex: 1;
+    }
+    .vivo-col {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .vivo-col-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .vivo-col-header svg {
+      width: 14px; height: 14px;
+      stroke: currentColor; fill: none;
+      stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .vivo-col-header.green { color: var(--green-t); border-bottom-color: var(--green); }
+    .vivo-col-header.red   { color: var(--red-t);   border-bottom-color: var(--red); }
+
+    .vivo-list {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 520px;
+    }
+    .vivo-empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.82rem;
+      padding: 32px 20px;
+    }
+    .vivo-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 20px;
+      border-bottom: 1px solid #1c2128;
+      transition: background .15s;
+    }
+    .vivo-item:last-child { border-bottom: none; }
+    .vivo-item:hover { background: #1c2128; }
+    .vivo-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      letter-spacing: 0;
+    }
+    .vivo-avatar.presente {
+      background: #0d2818;
+      border: 1px solid var(--green);
+      color: var(--green-t);
+    }
+    .vivo-avatar.ausente {
+      background: #21262d;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .vivo-info { flex: 1; min-width: 0; }
+    .vivo-info .vivo-nombre {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .vivo-info .vivo-sector {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+    .vivo-hora {
+      font-size: 0.75rem;
+      font-family: monospace;
+      color: var(--green-t);
+      flex-shrink: 0;
+    }
+    .vivo-hora.ausente { color: var(--muted); }
   </style>
 </head>
 <body>
@@ -995,7 +1178,7 @@
     <div class="sidebar-brand">
       <h1>BLACK</h1>
       <p>Asistencia</p>
-      <span style="font-size:0.62rem;color:#444d56;margin-top:4px;display:block;letter-spacing:1px">VERSION 1.71</span>
+      <span style="font-size:0.62rem;color:#444d56;margin-top:4px;display:block;letter-spacing:1px">VERSION 1.73</span>
     </div>
     <nav class="sidebar-nav">
       <button class="nav-item active" onclick="showPanel('scanner', this)">
@@ -1005,6 +1188,10 @@
       <button class="nav-item" onclick="showPanel('reportes', this)">
         <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
         Reportes
+      </button>
+      <button class="nav-item" onclick="showPanel('vivo', this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        Vista en vivo
       </button>
       <button class="nav-item" onclick="showPanel('empleados', this)">
         <svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -1274,6 +1461,78 @@
 
     </div><!-- /panelEmpleados -->
 
+    <!-- Panel Vista en Vivo -->
+    <div class="panel" id="panelVivo">
+
+      <!-- Toolbar -->
+      <div class="vivo-toolbar">
+        <div class="vivo-toolbar-left">
+          <span class="vivo-title">Estado del turno</span>
+          <span class="vivo-update-info">Última actualización: <span id="vivoUltimaAct">—</span></span>
+        </div>
+        <div class="vivo-toolbar-right">
+          <select class="filter-select" id="vivoFiltroSector" onchange="filtrarVivo()">
+            <option value="">Todos los sectores</option>
+            <option>Deposito</option>
+            <option>Ventas</option>
+            <option>Reparto</option>
+            <option>Administracion</option>
+          </select>
+          <button class="btn-vivo-refresh" id="btnVivoRefresh" onclick="actualizarVivo()">
+            <svg viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Actualizar
+          </button>
+        </div>
+      </div>
+
+      <!-- Contadores rápidos -->
+      <div class="vivo-stats">
+        <div class="vivo-stat green">
+          <span class="vivo-num" id="vivoCntPresentes">0</span>
+          <span class="vivo-lbl">Presentes</span>
+        </div>
+        <div class="vivo-stat red">
+          <span class="vivo-num" id="vivoCntAusentes">0</span>
+          <span class="vivo-lbl">Ausentes</span>
+        </div>
+        <div class="vivo-stat">
+          <span class="vivo-num" id="vivoCntTotal">0</span>
+          <span class="vivo-lbl">Total activos</span>
+        </div>
+        <div class="vivo-stat yellow">
+          <span class="vivo-num" id="vivoPct">0%</span>
+          <span class="vivo-lbl">Asistencia</span>
+        </div>
+      </div>
+
+      <!-- Dos columnas -->
+      <div class="vivo-columns">
+
+        <!-- Presentes -->
+        <div class="vivo-col">
+          <div class="vivo-col-header green">
+            <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+            Presentes
+          </div>
+          <div class="vivo-list" id="vivoListaPresentes">
+            <div class="vivo-empty">Presione Actualizar para cargar</div>
+          </div>
+        </div>
+
+        <!-- Ausentes -->
+        <div class="vivo-col">
+          <div class="vivo-col-header red">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            Ausentes
+          </div>
+          <div class="vivo-list" id="vivoListaAusentes">
+            <div class="vivo-empty">Presione Actualizar para cargar</div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /panelVivo -->
+
   </div><!-- /main -->
 </div><!-- /app -->
 
@@ -1349,7 +1608,7 @@
   // ══════════════════════════════════════════════════════════════
   //  CONFIG
   // ══════════════════════════════════════════════════════════════
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2WS_g8kaxKaAxqXKdhY94XhFEyEAV25vKOrWxHX3hqOuyDt_yuoxGPaRZWQ4POGqN/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzvnwU2miFcZp4CgsmHUu5t4Sm9fUJmmS29v8f28nIZ_FatN9FR-aQX4ZaMPd3ClDgd/exec';
   const SECRET_KEY      = 'ZRoTWkPTq44048';
   const PASS            = 'black/7889/BLACK';
 
@@ -1399,7 +1658,7 @@
   // ══════════════════════════════════════════════════════════════
   //  NAVEGACION
   // ══════════════════════════════════════════════════════════════
-  const titles = { scanner: 'Scanner', reportes: 'Reportes', empleados: 'Empleados' };
+  const titles = { scanner: 'Scanner', reportes: 'Reportes', empleados: 'Empleados', vivo: 'Vista en vivo' };
 
   function showPanel(id, btn) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -2079,6 +2338,142 @@
 
   function exportarExcel() {
     alert('Exportacion proximamente disponible');
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  VISTA EN VIVO
+  // ══════════════════════════════════════════════════════════════
+  let vivoData = []; // cache de movimientos de hoy
+
+  function actualizarVivo() {
+    const btn = document.getElementById('btnVivoRefresh');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btn.querySelector('svg').style.animation = 'spin .7s linear infinite';
+
+    const old = document.getElementById('jsonp_vivo');
+    if (old) old.remove();
+    if (window.__jsonpVivo) delete window.__jsonpVivo;
+
+    const timer = setTimeout(() => {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      mostrarVivoError('Timeout — no se pudo contactar al servidor');
+    }, 10000);
+
+    window.__jsonpVivo = function(data) {
+      clearTimeout(timer);
+      btn.disabled = false;
+      btn.classList.remove('loading');
+
+      if (!data.ok) {
+        mostrarVivoError('Error: ' + (data.error || 'desconocido'));
+        return;
+      }
+
+      vivoData = data.movimientos || [];
+      renderVivo();
+
+      const ahora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+      document.getElementById('vivoUltimaAct').textContent = ahora;
+    };
+
+    const s = document.createElement('script');
+    s.id  = 'jsonp_vivo';
+    s.src = `${APPS_SCRIPT_URL}?action=getMovimientosHoy&key=${SECRET_KEY}&callback=__jsonpVivo`;
+    s.onerror = () => {
+      clearTimeout(timer);
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      mostrarVivoError('Error de red');
+    };
+    document.body.appendChild(s);
+  }
+
+  function renderVivo() {
+    const filtroSector = document.getElementById('vivoFiltroSector').value;
+
+    // Construir mapa: codigo → último movimiento y hora
+    const mapaEstado = {};
+    vivoData.forEach(m => {
+      // Guardar siempre el último (ya vienen ordenados cronológicamente desde Sheets)
+      mapaEstado[m.codigo] = { tipo: m.tipo, hora: m.hora };
+    });
+
+    // Separar activos en presentes y ausentes
+    const presentes = [];
+    const ausentes  = [];
+
+    Object.entries(empleados).forEach(([cod, emp]) => {
+      if (emp.estado !== 'ACTIVO') return;
+      if (filtroSector && emp.sector !== filtroSector) return;
+
+      const mov = mapaEstado[cod];
+      if (mov && mov.tipo === 'INGRESO') {
+        presentes.push({ cod, emp, hora: mov.hora });
+      } else {
+        ausentes.push({ cod, emp, hora: null });
+      }
+    });
+
+    // Ordenar presentes por hora, ausentes por nombre
+    presentes.sort((a, b) => a.hora > b.hora ? 1 : -1);
+    ausentes.sort((a, b)  => a.emp.nombre.localeCompare(b.emp.nombre));
+
+    // Actualizar contadores
+    const total = Object.values(empleados).filter(e => e.estado === 'ACTIVO').length;
+    document.getElementById('vivoCntPresentes').textContent = presentes.length;
+    document.getElementById('vivoCntAusentes').textContent  = ausentes.length;
+    document.getElementById('vivoCntTotal').textContent     = total;
+    const pct = total > 0 ? Math.round((presentes.length / total) * 100) : 0;
+    document.getElementById('vivoPct').textContent = pct + '%';
+
+    // Render presentes
+    const listaP = document.getElementById('vivoListaPresentes');
+    if (presentes.length === 0) {
+      listaP.innerHTML = '<div class="vivo-empty">Sin presentes aún</div>';
+    } else {
+      listaP.innerHTML = presentes.map(({ cod, emp, hora }) => `
+        <div class="vivo-item">
+          <div class="vivo-avatar presente">${iniciales(emp.nombre)}</div>
+          <div class="vivo-info">
+            <div class="vivo-nombre">${emp.nombre}</div>
+            <div class="vivo-sector">${emp.sector}</div>
+          </div>
+          <div class="vivo-hora">${hora}</div>
+        </div>`).join('');
+    }
+
+    // Render ausentes
+    const listaA = document.getElementById('vivoListaAusentes');
+    if (ausentes.length === 0) {
+      listaA.innerHTML = '<div class="vivo-empty">Todos presentes 🎉</div>';
+    } else {
+      listaA.innerHTML = ausentes.map(({ cod, emp }) => `
+        <div class="vivo-item">
+          <div class="vivo-avatar ausente">${iniciales(emp.nombre)}</div>
+          <div class="vivo-info">
+            <div class="vivo-nombre">${emp.nombre}</div>
+            <div class="vivo-sector">${emp.sector}</div>
+          </div>
+          <div class="vivo-hora ausente">—</div>
+        </div>`).join('');
+    }
+  }
+
+  function filtrarVivo() {
+    if (vivoData.length > 0) renderVivo();
+  }
+
+  function mostrarVivoError(msg) {
+    document.getElementById('vivoListaPresentes').innerHTML = `<div class="vivo-empty">${msg}</div>`;
+    document.getElementById('vivoListaAusentes').innerHTML  = `<div class="vivo-empty">${msg}</div>`;
+  }
+
+  function iniciales(nombre) {
+    const partes = nombre.trim().split(' ');
+    if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
+    return nombre.substring(0, 2).toUpperCase();
   }
 
   // Fechas por defecto
