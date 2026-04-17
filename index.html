@@ -1776,6 +1776,15 @@
   });
 
   // ══════════════════════════════════════════════════════════════
+  //  NORMALIZACIÓN DE CÓDIGOS
+  // ══════════════════════════════════════════════════════════════
+  function normalizarCodigo(codigo) {
+    return String(codigo)
+      .replace(/[\u00AD\u200B-\u200D\u200E\u200F\u2028\u2029\uFEFF]/g, '')
+      .trim();
+  }
+
+  // ══════════════════════════════════════════════════════════════
   //  ANTI DOBLE ESCANEO
   // ══════════════════════════════════════════════════════════════
   const ultimoScaneo = {};
@@ -1812,7 +1821,7 @@
   function aplicarEmpleados(data) {
     empleados = {};
     data.forEach(emp => {
-      empleados[String(emp.codigo).trim()] = {
+      empleados[normalizarCodigo(emp.codigo)] = {
         nombre: emp.nombre,
         sector: emp.sector,
         estado: String(emp.estado).trim().toUpperCase()
@@ -1967,7 +1976,7 @@
       // Reconstruir estadoDia — último movimiento de cada empleado
       const movs = data.movimientos;
       movs.forEach(m => {
-        estadoDia[String(m.codigo).trim()] = String(m.tipo).toUpperCase();
+        estadoDia[normalizarCodigo(m.codigo)] = String(m.tipo).toUpperCase();
       });
       actualizarContador();
 
@@ -1997,7 +2006,7 @@
   input.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      const codigo = input.value.trim();
+      const codigo = normalizarCodigo(input.value);
       input.value = '';
       if (!codigo) return;
       await procesarCodigo(codigo);
@@ -2279,7 +2288,7 @@
   }
 
   function guardarEmpleado() {
-    const cod    = document.getElementById('mCodigo').value.trim();
+    const cod    = normalizarCodigo(document.getElementById('mCodigo').value);
     const nombre = document.getElementById('mNombre').value.trim();
     const sector = document.getElementById('mSector').value;
     const estado = document.getElementById('mEstado').value;
